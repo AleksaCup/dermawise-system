@@ -15,6 +15,12 @@
 
     <dependencies>
         <dependency>
+            <groupId>com.ftn.sbnz</groupId>
+            <artifactId>model</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <dependency>
             <groupId>org.kie</groupId>
             <artifactId>kie-api</artifactId>
             <version>${drools.version}</version>
