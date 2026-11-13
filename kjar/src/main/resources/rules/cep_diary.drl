@@ -16,10 +16,12 @@ import com.ftn.sbnz.model.diary.FlushingEpizoda;
 import com.ftn.sbnz.model.diary.NoviProizvod;
 import com.ftn.sbnz.model.diary.SkinSymptom;
 import com.ftn.sbnz.model.diary.UVDanEvent;
+import com.ftn.sbnz.model.enums.BodyArea;
 import com.ftn.sbnz.model.enums.CepAlertType;
 import com.ftn.sbnz.model.enums.FlushTrigger;
 import com.ftn.sbnz.model.enums.RoutineSlot;
 import com.ftn.sbnz.model.enums.RoutineStep;
+import com.ftn.sbnz.model.enums.SymptomType;
 import com.ftn.sbnz.model.facts.MEDValue;
 import com.ftn.sbnz.model.facts.User;
 import org.kie.api.definition.rule.Rule;
@@ -67,6 +69,19 @@ end
 declare GlogauProgressionRisk
     @role(event)
     @expires(30d)
+end
+
+declare SumnjaNaSeboroicniDermatitis
+    @role(event)
+    @expires(14d)
+    userId : String
+end
+
+declare SumnjaNaKontaktnuReakciju
+    @role(event)
+    @expires(14d)
+    userId : String
+    proizvod : String
 end
 
 function void informUser(RuleContext kcontext, String userId, CepAlertType type, String message) {
@@ -172,4 +187,37 @@ then
     informUser(kcontext, $id, CepAlertType.PHOTOAGING_RISK,
         "MED je prekoračen " + $broj + " dana u poslednjih 30 dana - povećan rizik od fotostarenja. "
             + "Preporučeni su vitamin C 15% ujutru i tretinoin 0.025% uveče, uz obavezan SPF.");
+end
+
+rule "Učestalo ljuštenje u seboroičnim regijama"
+    @source("Klinička slika, dnevnik kože")
+    @opis("Ljuštenje u seboroičnim regijama zabeleženo najmanje 3 puta za 14 dana")
+when
+    User($id : id)
+    not SumnjaNaSeboroicniDermatitis(userId == $id)
+    Number($broj : intValue >= Thresholds.CEP_SCALING_IN_14_DAYS) from accumulate(
+        $s : SkinSymptom(userId == $id, type == SymptomType.SCALING,
+                         location in (BodyArea.NASOLABIAL_FOLDS, BodyArea.EYEBROWS, BodyArea.SCALP, BodyArea.BEHIND_EARS))
+            over window:time(14d),
+        count($s))
+then
+    insert(new SumnjaNaSeboroicniDermatitis($id));
+    informUser(kcontext, $id, CepAlertType.SEBORRHEIC_SYMPTOMS,
+        "Ljuštenje u seboroičnim regijama zabeleženo je " + $broj + " puta za 14 dana - moguć seboroični dermatitis, "
+            + "ponovite analizu kože.");
+end
+
+rule "Reakcija na novi proizvod"
+    @source("Klinička praksa, kontaktni dermatitis")
+    @opis("Crvenilo, peckanje ili svrab na mestu primene u roku od 14 dana posle uvođenja novog proizvoda")
+when
+    $novi : NoviProizvod($id : userId, $proizvod : proizvod)
+    SkinSymptom(userId == $id, type in (SymptomType.ERYTHEMA, SymptomType.STINGING, SymptomType.ITCHING),
+                location memberOf $proizvod.applicationAreas, this after[0s, 14d] $novi)
+    not SumnjaNaKontaktnuReakciju(userId == $id, proizvod == $proizvod.name)
+then
+    insert(new SumnjaNaKontaktnuReakciju($id, $proizvod.getName()));
+    informUser(kcontext, $id, CepAlertType.CONTACT_REACTION,
+        "Simptom na mestu primene proizvoda " + $proizvod.getName() + " u prvih 14 dana - moguća kontaktna reakcija. "
+            + "Prekinite proizvod i pokrenite proveru uzročnika.");
 end
