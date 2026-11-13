@@ -1,10 +1,12 @@
 package com.ftn.sbnz.kjar;
 
+import com.ftn.sbnz.model.diary.FlushingSummary;
 import com.ftn.sbnz.model.diary.SkinSymptom;
 import com.ftn.sbnz.model.enums.BodyArea;
 import com.ftn.sbnz.model.enums.EthnicOrigin;
 import com.ftn.sbnz.model.enums.EyeColor;
 import com.ftn.sbnz.model.enums.FaceRegion;
+import com.ftn.sbnz.model.enums.FlushTrigger;
 import com.ftn.sbnz.model.enums.HairColor;
 import com.ftn.sbnz.model.enums.LesionType;
 import com.ftn.sbnz.model.enums.SkinColor;
@@ -25,6 +27,7 @@ import java.util.Date;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class Questionnaires {
 
@@ -82,6 +85,16 @@ public class Questionnaires {
 
     public Questionnaires symptom(SymptomType type, BodyArea location) {
         extraFacts.add(new SkinSymptom(USER_ID, new Date(), type, location));
+        return this;
+    }
+
+    public Questionnaires flushingDiary(int lastSevenDays, FlushTrigger... triggers) {
+        extraFacts.add(new FlushingSummary(USER_ID, lastSevenDays, Set.of(triggers)));
+        return this;
+    }
+
+    public Questionnaires fact(Object fact) {
+        extraFacts.add(fact);
         return this;
     }
 
