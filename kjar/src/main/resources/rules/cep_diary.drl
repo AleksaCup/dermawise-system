@@ -1,1 +1,223 @@
 package rules;
+
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.util.Date;
+import java.util.Set;
+
+import com.ftn.sbnz.kjar.RuleUtils;
+import com.ftn.sbnz.kjar.Thresholds;
+import com.ftn.sbnz.model.cep.CepAlert;
+import com.ftn.sbnz.model.cep.DominantTrigger;
+import com.ftn.sbnz.model.cep.GlogauProgressionRisk;
+import com.ftn.sbnz.model.cep.HighUVExposureWarning;
+import com.ftn.sbnz.model.cep.RosaceaSuspicion;
+import com.ftn.sbnz.model.diary.FlushingEpizoda;
+import com.ftn.sbnz.model.diary.NoviProizvod;
+import com.ftn.sbnz.model.diary.SkinSymptom;
+import com.ftn.sbnz.model.diary.UVDanEvent;
+import com.ftn.sbnz.model.enums.BodyArea;
+import com.ftn.sbnz.model.enums.CepAlertType;
+import com.ftn.sbnz.model.enums.FlushTrigger;
+import com.ftn.sbnz.model.enums.RoutineSlot;
+import com.ftn.sbnz.model.enums.RoutineStep;
+import com.ftn.sbnz.model.enums.SymptomType;
+import com.ftn.sbnz.model.facts.MEDValue;
+import com.ftn.sbnz.model.facts.User;
+import org.kie.api.definition.rule.Rule;
+import org.kie.api.runtime.rule.RuleContext;
+
+declare FlushingEpizoda
+    @role(event)
+    @timestamp(timestamp)
+    @expires(31d)
+end
+
+declare UVDanEvent
+    @role(event)
+    @timestamp(date)
+    @expires(2d)
+end
+
+declare NoviProizvod
+    @role(event)
+    @timestamp(timestamp)
+    @expires(31d)
+end
+
+declare SkinSymptom
+    @role(event)
+    @timestamp(timestamp)
+    @expires(31d)
+end
+
+declare RosaceaSuspicion
+    @role(event)
+    @expires(7d)
+end
+
+declare DominantTrigger
+    @role(event)
+    @expires(30d)
+end
+
+declare HighUVExposureWarning
+    @role(event)
+    @expires(31d)
+end
+
+declare GlogauProgressionRisk
+    @role(event)
+    @expires(30d)
+end
+
+declare SumnjaNaSeboroicniDermatitis
+    @role(event)
+    @expires(14d)
+    userId : String
+end
+
+declare SumnjaNaKontaktnuReakciju
+    @role(event)
+    @expires(14d)
+    userId : String
+    proizvod : String
+end
+
+function void informUser(RuleContext kcontext, String userId, CepAlertType type, String message) {
+    long now = kcontext.getKieRuntime().getSessionClock().getCurrentTime();
+    kcontext.getKieRuntime().insert(new CepAlert(userId, type, message, new Date(now)));
+}
+
+function void preporuciTretman(RuleContext kcontext, String userId) {
+    Rule rule = kcontext.getRule();
+    kcontext.getKieRuntime().insert(RuleUtils.recommendation(rule, userId, null, "vitamin c", 15.0, "serum",
+        RoutineSlot.MORNING, RoutineStep.TREATMENT, "1x ujutru", false,
+        "Antioksidans koji smanjuje oštećenje kože od UV zračenja"));
+    kcontext.getKieRuntime().insert(RuleUtils.recommendation(rule, userId, null, "tretinoin", 0.025, "krema",
+        RoutineSlot.EVENING, RoutineStep.TREATMENT, "1x uveče", true,
+        "Retinoid sa dokazanim dejstvom na fotostarenje"));
+    kcontext.getKieRuntime().getAgenda().getAgendaGroup("safety").setFocus();
+}
+
+function double eritemskaDoza(double uvIndex, int minuti, int spf) {
+    return 0.15 * uvIndex * minuti / Math.max(spf, 1);
+}
+
+function LocalDate dan(Date datum) {
+    return datum.toInstant().atZone(ZoneId.of("Europe/Belgrade")).toLocalDate();
+}
+
+rule "Sumnja na ETR rozaceju"
+    @source("Wilkin 2002, NRS")
+    @opis("Najmanje 4 flushing epizode u poslednjih 7 dana: sumnja na ETR rozaceju")
+when
+    User($id : id)
+    not RosaceaSuspicion(userId == $id)
+    Number($broj : intValue >= Thresholds.CEP_FLUSHING_IN_7_DAYS) from accumulate(
+        $e : FlushingEpizoda(userId == $id) over window:time(7d),
+        count($e))
+then
+    insert(new RosaceaSuspicion($id, "ETR", "high"));
+    informUser(kcontext, $id, CepAlertType.ROSACEA_SUSPICION,
+        "Detektovano " + $broj + " epizoda flushing-a u poslednjih 7 dana - sumnja na ETR rozaceju, "
+            + "preporučuje se konsultacija dermatologa");
+end
+
+rule "Identifikacija dominantnog okidaca"
+    @source("Wilkin 2002, NRS")
+    @opis("Isti okidač u najmanje 3 flushing epizode za 30 dana je dominantni okidač")
+when
+    User($id : id)
+    $okidaci : Set() from accumulate(
+        FlushingEpizoda(userId == $id, trigger != null, $t : trigger) over window:time(30d),
+        collectSet($t))
+    $okidac : FlushTrigger() from $okidaci
+    not DominantTrigger(userId == $id, trigger == $okidac)
+    Number($broj : intValue >= Thresholds.CEP_DOMINANT_TRIGGER_IN_30_DAYS) from accumulate(
+        $e : FlushingEpizoda(userId == $id, trigger == $okidac) over window:time(30d),
+        count($e))
+then
+    insert(new DominantTrigger($id, $okidac));
+    informUser(kcontext, $id, CepAlertType.DOMINANT_TRIGGER,
+        "Identifikovan okidač: " + $okidac.name().toLowerCase() + " (" + $broj + " epizoda u poslednjih 30 dana)");
+end
+
+rule "Prekoracenje MED u odnosu na fototip"
+    @source("Fitzpatrick 1975, MED")
+    @opis("Eritemska doza sa sunca u poslednja 24 h je veća od polovine MED za fototip korisnika")
+when
+    User($id : id, $tip : fototip, fototip > 0)
+    MEDValue(fototip == $tip, $medValue : value)
+    UVDanEvent(userId == $id, $datum : date)
+    not UVDanEvent(userId == $id, date > $datum)
+    not HighUVExposureWarning(userId == $id, day == dan($datum))
+    Number($doza : doubleValue > $medValue * Thresholds.CEP_MED_FRACTION_PER_DAY) from accumulate(
+        UVDanEvent(userId == $id, $uv : uvIndex, $minuti : minutiNaSuncu, $spf : sunscreenSPF) over window:time(24h),
+        sum(eritemskaDoza($uv, $minuti, $spf)))
+then
+    insert(new HighUVExposureWarning($id, dan($datum)));
+    informUser(kcontext, $id, CepAlertType.HIGH_UV_EXPOSURE,
+        String.format("Premašeno 50%% MED za vaš fototip danas: %.1f od %.0f mJ/cm²", $doza, $medValue));
+end
+
+rule "Vrlo visok UV bez zaštite"
+    @source("WHO, UV indeks")
+    @opis("UV indeks 8 ili više i bar 30 minuta na suncu bez kreme za sunčanje")
+when
+    UVDanEvent($id : userId, uvIndex >= Thresholds.CEP_VERY_HIGH_UV_INDEX,
+               minutiNaSuncu >= Thresholds.CEP_VERY_HIGH_UV_MINUTES, sunscreenSPF == 0, $uv : uvIndex)
+then
+    informUser(kcontext, $id, CepAlertType.VERY_HIGH_UV,
+        "UV indeks " + $uv + " je vrlo visok, a krema za sunčanje nije korišćena. Sledeći put SPF 30 ili viši i hlad od 11 do 16 h.");
+end
+
+rule "Pojacan rizik fotostarenja"
+    @source("Glogau 1996")
+    @opis("Najmanje 5 dana sa prekoračenjem MED u 30 dana povećava rizik prelaska u višu Glogau kategoriju")
+when
+    User($id : id)
+    not GlogauProgressionRisk(userId == $id)
+    Number($broj : intValue >= Thresholds.CEP_UV_WARNINGS_IN_30_DAYS) from accumulate(
+        $w : HighUVExposureWarning(userId == $id) over window:time(30d),
+        count($w))
+then
+    insert(new GlogauProgressionRisk($id, "II_to_III"));
+    preporuciTretman(kcontext, $id);
+    informUser(kcontext, $id, CepAlertType.PHOTOAGING_RISK,
+        "MED je prekoračen " + $broj + " dana u poslednjih 30 dana - povećan rizik od fotostarenja. "
+            + "Preporučeni su vitamin C 15% ujutru i tretinoin 0.025% uveče, uz obavezan SPF.");
+end
+
+rule "Učestalo ljuštenje u seboroičnim regijama"
+    @source("Klinička slika, dnevnik kože")
+    @opis("Ljuštenje u seboroičnim regijama zabeleženo najmanje 3 puta za 14 dana")
+when
+    User($id : id)
+    not SumnjaNaSeboroicniDermatitis(userId == $id)
+    Number($broj : intValue >= Thresholds.CEP_SCALING_IN_14_DAYS) from accumulate(
+        $s : SkinSymptom(userId == $id, type == SymptomType.SCALING,
+                         location in (BodyArea.NASOLABIAL_FOLDS, BodyArea.EYEBROWS, BodyArea.SCALP, BodyArea.BEHIND_EARS))
+            over window:time(14d),
+        count($s))
+then
+    insert(new SumnjaNaSeboroicniDermatitis($id));
+    informUser(kcontext, $id, CepAlertType.SEBORRHEIC_SYMPTOMS,
+        "Ljuštenje u seboroičnim regijama zabeleženo je " + $broj + " puta za 14 dana - moguć seboroični dermatitis, "
+            + "ponovite analizu kože.");
+end
+
+rule "Reakcija na novi proizvod"
+    @source("Klinička praksa, kontaktni dermatitis")
+    @opis("Crvenilo, peckanje ili svrab na mestu primene u roku od 14 dana posle uvođenja novog proizvoda")
+when
+    $novi : NoviProizvod($id : userId, $proizvod : proizvod)
+    SkinSymptom(userId == $id, type in (SymptomType.ERYTHEMA, SymptomType.STINGING, SymptomType.ITCHING),
+                location memberOf $proizvod.applicationAreas, this after[0s, 14d] $novi)
+    not SumnjaNaKontaktnuReakciju(userId == $id, proizvod == $proizvod.name)
+then
+    insert(new SumnjaNaKontaktnuReakciju($id, $proizvod.getName()));
+    informUser(kcontext, $id, CepAlertType.CONTACT_REACTION,
+        "Simptom na mestu primene proizvoda " + $proizvod.getName() + " u prvih 14 dana - moguća kontaktna reakcija. "
+            + "Prekinite proizvod i pokrenite proveru uzročnika.");
+end
