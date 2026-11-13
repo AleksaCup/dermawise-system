@@ -1,0 +1,10 @@
+**/target
+.git
+.notes
+.claude
+CLAUDE.md
+.idea
+.vscode
+demo
+node_modules
+*.pdf

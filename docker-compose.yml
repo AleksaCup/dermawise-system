@@ -16,5 +16,22 @@ services:
       timeout: 5s
       retries: 10
 
+  service:
+    build:
+      context: .
+      dockerfile: service/Dockerfile
+    container_name: dermawise-service
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-dermawise}
+      DB_USER: ${POSTGRES_USER:-dermawise}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-dermawise}
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-dev}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:3000}
+    ports:
+      - "${SERVICE_PORT:-8080}:8080"
+
 volumes:
   postgres-data:
