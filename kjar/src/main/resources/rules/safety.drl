@@ -8,6 +8,7 @@ import com.ftn.sbnz.model.facts.Recommendation;
 import com.ftn.sbnz.model.facts.SafetyNote;
 import com.ftn.sbnz.model.facts.User;
 import com.ftn.sbnz.model.questionnaire.LifestyleAnswers;
+import com.ftn.sbnz.model.questionnaire.Product;
 
 function String razlog(User u) {
     return u.isPregnant() ? "prijavljena trudnoća" : "prijavljeno dojenje";
@@ -134,5 +135,41 @@ when
 then
     insert(new SafetyNote($id,
         "Retinoidi stanjuju rožnati sloj i povećavaju osetljivost na sunce, SPF je obavezan svako jutro.",
+        RuleUtils.source(drools.getRule())));
+end
+
+rule "Alergija na preporučeni sastojak"
+    @source("Poznate alergije i unakrsne reaktivnosti korisnika")
+    @opis("Preporučeni sastojak je poznat alergen korisnika (backward upit PoznatAlergen) i povlači se")
+    agenda-group "safety"
+    salience 20
+when
+    $r : Recommendation($id : userId, $sastojak : sastojak,
+                        status not in (RecommendationStatus.WITHDRAWN, RecommendationStatus.REJECTED))
+    PoznatAlergen($id, $sastojak;)
+then
+    modify($r) {
+        setStatus(RecommendationStatus.WITHDRAWN),
+        addWarning("Povučeno: poznata alergija ili unakrsna reaktivnost")
+    }
+    insert(new SafetyNote($id,
+        velikoSlovo($sastojak) + " povučen - poznata alergija ili unakrsna reaktivnost",
+        RuleUtils.source(drools.getRule())));
+end
+
+rule "Proizvod u upotrebi sadrži poznat alergen"
+    @source("Poznate alergije i unakrsne reaktivnosti korisnika")
+    @opis("Proizvod koji korisnik koristi sadrži poznat alergen, direktno ili kroz graf sastojaka")
+    agenda-group "safety"
+when
+    LifestyleAnswers($id : userId, $proizvodi : currentProducts)
+    $proizvod : Product($ime : name) from $proizvodi
+    ProizvodSadrzi($proizvod, $sastojak;)
+    PoznatAlergen($id, $sastojak;)
+    not SafetyNote(userId == $id,
+                   text == ("Proizvod " + $ime + " sadrži " + $sastojak + ", na koji ste alergični. Prestanite da ga koristite."))
+then
+    insert(new SafetyNote($id,
+        "Proizvod " + $ime + " sadrži " + $sastojak + ", na koji ste alergični. Prestanite da ga koristite.",
         RuleUtils.source(drools.getRule())));
 end
