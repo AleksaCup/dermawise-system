@@ -1,10 +1,13 @@
 package rules;
 
 import com.ftn.sbnz.kjar.Thresholds;
+import com.ftn.sbnz.model.diary.SkinSymptom;
+import com.ftn.sbnz.model.enums.BodyArea;
 import com.ftn.sbnz.model.enums.Condition;
 import com.ftn.sbnz.model.enums.LesionType;
 import com.ftn.sbnz.model.enums.RosaceaSubtype;
 import com.ftn.sbnz.model.enums.Severity;
+import com.ftn.sbnz.model.enums.SymptomType;
 import com.ftn.sbnz.model.facts.DataReady;
 import com.ftn.sbnz.model.facts.Diagnosis;
 import com.ftn.sbnz.model.facts.Nalaz;
@@ -324,4 +327,45 @@ when
     not Diagnosis(userId == $id, condition == Condition.PERIORAL_DERMATITIS)
 then
     insert(new Diagnosis($id, Condition.PERIORAL_DERMATITIS, null, null, null));
+end
+
+rule "Nalaz ljuštenje u seboroičnoj regiji"
+    @source("Klinička slika, dnevnik kože")
+    @opis("Ljuštenje u nazolabijalnim borama, obrvama, skalpu ili iza ušiju")
+    agenda-group "diagnosis"
+    salience 30
+when
+    DataReady($id : userId)
+    exists SkinSymptom(userId == $id, type == SymptomType.SCALING,
+        location in (BodyArea.NASOLABIAL_FOLDS, BodyArea.EYEBROWS, BodyArea.SCALP, BodyArea.BEHIND_EARS))
+    not Nalaz(userId == $id, code == NalazCode.LJUSTENJE)
+then
+    insert(new Nalaz($id, NalazCode.LJUSTENJE));
+end
+
+rule "Nalaz eritem u seboroičnoj regiji"
+    @source("Klinička slika, dnevnik kože")
+    @opis("Crvenilo u nazolabijalnim borama, obrvama, skalpu ili iza ušiju")
+    agenda-group "diagnosis"
+    salience 30
+when
+    DataReady($id : userId)
+    exists SkinSymptom(userId == $id, type == SymptomType.ERYTHEMA,
+        location in (BodyArea.NASOLABIAL_FOLDS, BodyArea.EYEBROWS, BodyArea.SCALP, BodyArea.BEHIND_EARS))
+    not Nalaz(userId == $id, code == NalazCode.ERITEM)
+then
+    insert(new Nalaz($id, NalazCode.ERITEM));
+end
+
+rule "Seboroični dermatitis"
+    @source("Klinička slika, dnevnik kože")
+    @opis("Ljuštenje i crvenilo u seboroičnim regijama: sumnja na seboroični dermatitis")
+    agenda-group "diagnosis"
+when
+    DataReady($id : userId)
+    Nalaz(userId == $id, code == NalazCode.LJUSTENJE)
+    Nalaz(userId == $id, code == NalazCode.ERITEM)
+    not Diagnosis(userId == $id, condition == Condition.SEBORRHEIC_DERMATITIS)
+then
+    insert(new Diagnosis($id, Condition.SEBORRHEIC_DERMATITIS, null, null, null));
 end
