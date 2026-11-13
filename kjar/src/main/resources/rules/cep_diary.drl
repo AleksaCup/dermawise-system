@@ -1,5 +1,7 @@
 package rules;
 
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.Date;
 import java.util.Set;
 
@@ -15,6 +17,7 @@ import com.ftn.sbnz.model.diary.SkinSymptom;
 import com.ftn.sbnz.model.diary.UVDanEvent;
 import com.ftn.sbnz.model.enums.CepAlertType;
 import com.ftn.sbnz.model.enums.FlushTrigger;
+import com.ftn.sbnz.model.facts.MEDValue;
 import com.ftn.sbnz.model.facts.User;
 import org.kie.api.runtime.rule.RuleContext;
 
@@ -67,6 +70,14 @@ function void informUser(RuleContext kcontext, String userId, CepAlertType type,
     kcontext.getKieRuntime().insert(new CepAlert(userId, type, message, new Date(now)));
 }
 
+function double eritemskaDoza(double uvIndex, int minuti, int spf) {
+    return 0.15 * uvIndex * minuti / Math.max(spf, 1);
+}
+
+function LocalDate dan(Date datum) {
+    return datum.toInstant().atZone(ZoneId.of("Europe/Belgrade")).toLocalDate();
+}
+
 rule "Sumnja na ETR rozaceju"
     @source("Wilkin 2002, NRS")
     @opis("Najmanje 4 flushing epizode u poslednjih 7 dana: sumnja na ETR rozaceju")
@@ -100,4 +111,33 @@ then
     insert(new DominantTrigger($id, $okidac));
     informUser(kcontext, $id, CepAlertType.DOMINANT_TRIGGER,
         "Identifikovan okidač: " + $okidac.name().toLowerCase() + " (" + $broj + " epizoda u poslednjih 30 dana)");
+end
+
+rule "Prekoracenje MED u odnosu na fototip"
+    @source("Fitzpatrick 1975, MED")
+    @opis("Eritemska doza sa sunca u poslednja 24 h je veća od polovine MED za fototip korisnika")
+when
+    User($id : id, $tip : fototip, fototip > 0)
+    MEDValue(fototip == $tip, $medValue : value)
+    UVDanEvent(userId == $id, $datum : date)
+    not UVDanEvent(userId == $id, date > $datum)
+    not HighUVExposureWarning(userId == $id, day == dan($datum))
+    Number($doza : doubleValue > $medValue * Thresholds.CEP_MED_FRACTION_PER_DAY) from accumulate(
+        UVDanEvent(userId == $id, $uv : uvIndex, $minuti : minutiNaSuncu, $spf : sunscreenSPF) over window:time(24h),
+        sum(eritemskaDoza($uv, $minuti, $spf)))
+then
+    insert(new HighUVExposureWarning($id, dan($datum)));
+    informUser(kcontext, $id, CepAlertType.HIGH_UV_EXPOSURE,
+        String.format("Premašeno 50%% MED za vaš fototip danas: %.1f od %.0f mJ/cm²", $doza, $medValue));
+end
+
+rule "Vrlo visok UV bez zaštite"
+    @source("WHO, UV indeks")
+    @opis("UV indeks 8 ili više i bar 30 minuta na suncu bez kreme za sunčanje")
+when
+    UVDanEvent($id : userId, uvIndex >= Thresholds.CEP_VERY_HIGH_UV_INDEX,
+               minutiNaSuncu >= Thresholds.CEP_VERY_HIGH_UV_MINUTES, sunscreenSPF == 0, $uv : uvIndex)
+then
+    informUser(kcontext, $id, CepAlertType.VERY_HIGH_UV,
+        "UV indeks " + $uv + " je vrlo visok, a krema za sunčanje nije korišćena. Sledeći put SPF 30 ili viši i hlad od 11 do 16 h.");
 end
