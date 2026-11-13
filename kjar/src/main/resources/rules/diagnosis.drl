@@ -1,1 +1,19 @@
 package rules;
+
+import com.ftn.sbnz.model.facts.DataReady;
+import com.ftn.sbnz.model.facts.SeverityScore;
+import com.ftn.sbnz.model.questionnaire.RegionLesion;
+
+rule "GAGS skor"
+    @source("Doshi 1997, GAGS")
+    @opis("GAGS skor je zbir težine regiona puta ocene najteže lezije u regionu")
+    agenda-group "diagnosis"
+when
+    DataReady($id : userId)
+    not SeverityScore(userId == $id, scale == "GAGS")
+    Number($gags : intValue) from accumulate(
+        RegionLesion(userId == $id, $region : region, $lesion : lesion),
+        sum($region.getWeight() * $lesion.getGrade()))
+then
+    insert(new SeverityScore($id, "GAGS", $gags));
+end
