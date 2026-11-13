@@ -25,5 +25,6 @@
     <properties>
         <java.version>17</java.version>
         <drools.version>8.44.2.Final</drools.version>
+        <jjwt.version>0.12.6</jjwt.version>
     </properties>
 </project>
