@@ -244,3 +244,59 @@ then
         RoutineSlot.EVENING, RoutineStep.TREATMENT, "2x dnevno", true,
         "Leči perioralni dermatitis posle prekida steroida"));
 end
+
+rule "Emolijens kod atopijskog ili kontaktnog dermatitisa"
+    @source("Sidbury 2014, AAD")
+    @opis("Atopijski ili kontaktni dermatitis: emolijens bez mirisa dva puta dnevno obnavlja barijeru kože")
+    agenda-group "therapy"
+when
+    User($id : id)
+    exists Diagnosis(userId == $id, condition in (Condition.ATOPIC_DERMATITIS, Condition.CONTACT_DERMATITIS))
+then
+    insert(RuleUtils.recommendation(drools.getRule(), $id, null, "emolijens bez mirisa", null, "krema",
+        RoutineSlot.MORNING, RoutineStep.HYDRATION, "2x dnevno", false,
+        "Obnavlja oštećenu barijeru kože"));
+    insert(RuleUtils.recommendation(drools.getRule(), $id, null, "emolijens bez mirisa", null, "krema",
+        RoutineSlot.EVENING, RoutineStep.HYDRATION, "2x dnevno", false,
+        "Obnavlja oštećenu barijeru kože"));
+end
+
+rule "Atopijski dermatitis umeren: hidrokortizon"
+    @source("Sidbury 2014, AAD")
+    @opis("Umeren atopijski dermatitis: hidrokortizon 1% najviše 7 dana, zatim dermatolog ako nema poboljšanja")
+    agenda-group "therapy"
+when
+    Diagnosis($id : userId, condition == Condition.ATOPIC_DERMATITIS, severity == Severity.MODERATE)
+    not Recommendation(userId == $id, sastojak == "hidrokortizon")
+then
+    insert(RuleUtils.recommendation(drools.getRule(), $id, Condition.ATOPIC_DERMATITIS, "hidrokortizon", 1.0, "krema",
+        RoutineSlot.EVENING, RoutineStep.TREATMENT, "1x dnevno, najviše 7 dana", false,
+        "Kratko smiruje upalu i svrab. Ako posle 7 dana nema poboljšanja, javiti se dermatologu."));
+end
+
+rule "Seboroični dermatitis: cink pirition"
+    @source("Klinička praksa, seboroični dermatitis")
+    @opis("Seboroični dermatitis: cink pirition 1% na zahvaćena mesta tri puta nedeljno")
+    agenda-group "therapy"
+when
+    Diagnosis($id : userId, condition == Condition.SEBORRHEIC_DERMATITIS)
+then
+    insert(RuleUtils.recommendation(drools.getRule(), $id, Condition.SEBORRHEIC_DERMATITIS, "cink pirition", 1.0,
+        "šampon ili gel za umivanje", RoutineSlot.EVENING, RoutineStep.CLEANSING,
+        "3x nedeljno na zahvaćena mesta", false,
+        "Deluje protiv gljivice Malassezia i smanjuje ljuspanje"));
+end
+
+rule "Kontaktni dermatitis: prekid proizvoda i hidrokortizon"
+    @source("Klinička praksa, kontaktni dermatitis")
+    @opis("Kontaktni dermatitis: prekid proizvoda koji izaziva reakciju i hidrokortizon 1% najviše 7 dana")
+    agenda-group "therapy"
+when
+    Diagnosis($id : userId, condition == Condition.CONTACT_DERMATITIS)
+    not Recommendation(userId == $id, sastojak == "hidrokortizon")
+then
+    insert(new SafetyNote($id, "Prekinuti proizvod koji je izazvao reakciju.", RuleUtils.source(drools.getRule())));
+    insert(RuleUtils.recommendation(drools.getRule(), $id, Condition.CONTACT_DERMATITIS, "hidrokortizon", 1.0, "krema",
+        RoutineSlot.EVENING, RoutineStep.TREATMENT, "1x dnevno, najviše 7 dana", false,
+        "Kratko smiruje reakciju na koži. Ako posle 7 dana nema poboljšanja, javiti se dermatologu."));
+end
