@@ -1,5 +1,6 @@
 package rules;
 
+import com.ftn.sbnz.kjar.RuleUtils;
 import com.ftn.sbnz.kjar.Thresholds;
 import com.ftn.sbnz.model.diary.SkinSymptom;
 import com.ftn.sbnz.model.enums.BodyArea;
@@ -504,4 +505,28 @@ then
     insert(new SafetyNote($id,
         "Uz umerene ili teže akne prijavljena je hormonska terapija. Hormoni mogu da utiču na akne, pre lečenja se preporučuje konsultacija sa dermatologom.",
         "Zaenglein 2016, AAD"));
+end
+
+rule "Kontaktni dermatitis"
+    @source("Klinička praksa, kontaktni dermatitis")
+    @opis("Novi proizvod iz poslednjih 14 dana sadrži poznat alergen, a reakcija je na mestu primene")
+    agenda-group "diagnosis"
+when
+    DataReady($id : userId)
+    uzrocnikKontaktnogDermatitisa($id, $sastojak;)
+    not Diagnosis(userId == $id, condition == Condition.CONTACT_DERMATITIS)
+then
+    insert(new Diagnosis($id, Condition.CONTACT_DERMATITIS, null, null, null));
+end
+
+rule "Uzročnik kontaktnog dermatitisa"
+    @source("Klinička praksa, kontaktni dermatitis")
+    @opis("Za svaki sastojak koji backward upit pronađe kao uzročnika dodaje se napomena")
+    agenda-group "diagnosis"
+when
+    DataReady($id : userId)
+    uzrocnikKontaktnogDermatitisa($id, $sastojak;)
+    not SafetyNote(userId == $id, text == ("Verovatan uzročnik reakcije: " + $sastojak))
+then
+    insert(new SafetyNote($id, "Verovatan uzročnik reakcije: " + $sastojak, RuleUtils.source(drools.getRule())));
 end
