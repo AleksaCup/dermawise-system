@@ -1,0 +1,7 @@
+**/target
+.git
+.idea
+.vscode
+demo
+node_modules
+*.pdf

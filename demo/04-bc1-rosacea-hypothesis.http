@@ -1,0 +1,34 @@
+@host = http://localhost:8080
+
+### Prijava demo korisnika
+# @name demo
+POST {{host}}/api/auth/login
+Content-Type: application/json
+
+{"email": "demo@dermawise.rs", "password": "demo123"}
+
+### Vraćamo upitnik za rozaceju
+PUT {{host}}/api/profile/questionnaire
+Authorization: Bearer {{demo.response.body.token}}
+Content-Type: application/json
+
+< ../service/src/main/resources/questionnaires/rosacea-ppr.json
+
+### BC primer 1: imaRosaceju je dokazano, provenThrough su listovi rekurzivnog upita dokazano (flushing preko tranzijentnog eritema)
+GET {{host}}/api/backward/hypotheses/rozaceja
+Authorization: Bearer {{demo.response.body.token}}
+
+### Hipoteza akne nije dokazana jer nema komedona
+GET {{host}}/api/backward/hypotheses/akne
+Authorization: Bearer {{demo.response.body.token}}
+
+### Prijava dermatologa
+# @name derm
+POST {{host}}/api/auth/login
+Content-Type: application/json
+
+{"email": "dermatolog@dermawise.rs", "password": "derm123"}
+
+### Dermatolog proverava istu hipotezu za pacijenta
+GET {{host}}/api/backward/hypotheses/rozaceja?patientId={{demo.response.body.userId}}
+Authorization: Bearer {{derm.response.body.token}}

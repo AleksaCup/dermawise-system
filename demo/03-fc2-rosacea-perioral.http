@@ -1,0 +1,30 @@
+@host = http://localhost:8080
+
+### Prijava demo korisnika (registrovan u 01-auth.http)
+# @name demo
+POST {{host}}/api/auth/login
+Content-Type: application/json
+
+{"email": "demo@dermawise.rs", "password": "demo123"}
+
+### Upitnik: perzistentni centrofacijalni eritem, telangiektazije, flushing 3x nedeljno, 8 papula i 2 pustule, bez komedona
+PUT {{host}}/api/profile/questionnaire
+Authorization: Bearer {{demo.response.body.token}}
+Content-Type: application/json
+
+< ../service/src/main/resources/questionnaires/rosacea-ppr.json
+
+### FC primer 2: kriterijum rozaceje, akne isključene (nema komedona), PPR umerena, ivermektin + metronidazol čekaju dermatologa
+POST {{host}}/api/analysis
+Authorization: Bearer {{demo.response.body.token}}
+
+### Upitnik: papule oko usta, bez telangiektazija, skorašnji topijski kortikosteroid
+PUT {{host}}/api/profile/questionnaire
+Authorization: Bearer {{demo.response.body.token}}
+Content-Type: application/json
+
+< ../service/src/main/resources/questionnaires/perioral-dermatitis.json
+
+### Perioralni dermatitis: napomena o prekidu steroida i metronidazol 0.75% dva puta dnevno
+POST {{host}}/api/analysis
+Authorization: Bearer {{demo.response.body.token}}

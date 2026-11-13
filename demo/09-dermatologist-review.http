@@ -1,0 +1,39 @@
+@host = http://localhost:8080
+
+### Prijava dermatologa
+# @name derm
+POST {{host}}/api/auth/login
+Content-Type: application/json
+
+{"email": "dermatolog@dermawise.rs", "password": "derm123"}
+
+### Pacijenti sa fototipom, trudnoćom i brojem preporuka na čekanju
+GET {{host}}/api/dermatologist/patients
+Authorization: Bearer {{derm.response.body.token}}
+
+### Preporuke na recept koje čekaju potvrdu (PENDING_REVIEW), uz oznaku trudnoće
+# @name pending
+GET {{host}}/api/dermatologist/recommendations/pending
+Authorization: Bearer {{derm.response.body.token}}
+
+### Odobravanje prve preporuke na čekanju
+POST {{host}}/api/dermatologist/recommendations/{{pending.response.body.$[0].recommendation.id}}/approve
+Authorization: Bearer {{derm.response.body.token}}
+Content-Type: application/json
+
+{"comment": "Odobreno, kontrola za 6 nedelja"}
+
+### Odbijanje bez komentara vraća 400
+POST {{host}}/api/dermatologist/recommendations/{{pending.response.body.$[1].recommendation.id}}/reject
+Authorization: Bearer {{derm.response.body.token}}
+
+### Odbijanje druge preporuke sa komentarom
+POST {{host}}/api/dermatologist/recommendations/{{pending.response.body.$[1].recommendation.id}}/reject
+Authorization: Bearer {{derm.response.body.token}}
+Content-Type: application/json
+
+{"comment": "Prvo probati azelainsku kiselinu"}
+
+### Pacijent vidi novi status u svojoj rutini (APPROVED ili REJECTED sa komentarom)
+GET {{host}}/api/dermatologist/patients/{{pending.response.body.$[0].patientId}}/analysis
+Authorization: Bearer {{derm.response.body.token}}

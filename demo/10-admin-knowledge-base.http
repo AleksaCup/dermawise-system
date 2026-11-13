@@ -1,0 +1,34 @@
+@host = http://localhost:8080
+
+### Prijava administratora
+# @name admin
+POST {{host}}/api/auth/login
+Content-Type: application/json
+
+{"email": "admin@dermawise.rs", "password": "admin123"}
+
+### Nadzor baze znanja: verzija, broj redova template-a, pravila po bazi i fazi sa izvorom i opisom, query-ji
+GET {{host}}/api/admin/knowledge-base
+Authorization: Bearer {{admin.response.body.token}}
+
+### Svi korisnici sa ulogama
+GET {{host}}/api/admin/users
+Authorization: Bearer {{admin.response.body.token}}
+
+### Administrator dodaje dermatologa (pri ponovnom pokretanju 400 jer nalog postoji)
+POST {{host}}/api/admin/users
+Authorization: Bearer {{admin.response.body.token}}
+Content-Type: application/json
+
+{"email": "dr.nikolic@dermawise.rs", "password": "derm456", "fullName": "dr Marko Nikolić", "role": "DERMATOLOGIST"}
+
+### Prijava dermatologa
+# @name derm
+POST {{host}}/api/auth/login
+Content-Type: application/json
+
+{"email": "dermatolog@dermawise.rs", "password": "derm123"}
+
+### Dermatolog nema pristup administraciji, 403
+GET {{host}}/api/admin/knowledge-base
+Authorization: Bearer {{derm.response.body.token}}

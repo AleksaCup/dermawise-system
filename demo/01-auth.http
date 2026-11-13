@@ -1,0 +1,45 @@
+@host = http://localhost:8080
+
+### Prijava korisnice Ana (umerene akne, fototip II), odgovor sadrži JWT i ulogu USER
+POST {{host}}/api/auth/login
+Content-Type: application/json
+
+{"email": "ana@dermawise.rs", "password": "user123"}
+
+### Prijava korisnice Milica (isti upitnik kao Ana, ali trudna)
+POST {{host}}/api/auth/login
+Content-Type: application/json
+
+{"email": "milica@dermawise.rs", "password": "user123"}
+
+### Prijava dermatologa, uloga DERMATOLOGIST
+POST {{host}}/api/auth/login
+Content-Type: application/json
+
+{"email": "dermatolog@dermawise.rs", "password": "derm123"}
+
+### Prijava administratora, uloga ADMIN
+# @name admin
+POST {{host}}/api/auth/login
+Content-Type: application/json
+
+{"email": "admin@dermawise.rs", "password": "admin123"}
+
+### Registracija korisnika za scenarije 3-6 (pri ponovnom pokretanju vraća 400 jer nalog već postoji)
+POST {{host}}/api/auth/register
+Content-Type: application/json
+
+{"email": "demo@dermawise.rs", "password": "demo123", "fullName": "Demo Korisnik"}
+
+### Pogrešna lozinka daje 400 sa porukom
+POST {{host}}/api/auth/login
+Content-Type: application/json
+
+{"email": "ana@dermawise.rs", "password": "pogresna"}
+
+### Bez tokena zaštićeni deo vraća 401
+GET {{host}}/api/analysis/latest
+
+### Administrator nema pristup analizi korisnika, 403
+GET {{host}}/api/analysis/latest
+Authorization: Bearer {{admin.response.body.token}}

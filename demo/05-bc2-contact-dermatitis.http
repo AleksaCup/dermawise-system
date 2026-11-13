@@ -1,0 +1,48 @@
+@host = http://localhost:8080
+
+### Prijava demo korisnika
+# @name demo
+POST {{host}}/api/auth/login
+Content-Type: application/json
+
+{"email": "demo@dermawise.rs", "password": "demo123"}
+
+### Upitnik sa poznatom alergijom na methylisothiazolinone
+PUT {{host}}/api/profile/questionnaire
+Authorization: Bearer {{demo.response.body.token}}
+Content-Type: application/json
+
+< ./data/acne-with-mi-allergy.json
+
+### Dnevnik: pre 4 dana uveden losion za lice sa Kathon CG, nanosi se na obraze i čelo
+POST {{host}}/api/diary/products
+Authorization: Bearer {{demo.response.body.token}}
+Content-Type: application/json
+
+{
+  "occurredAt": "{{$datetime iso8601 -4 d}}",
+  "product": {
+    "name": "Losion za lice",
+    "ingredients": [{"name": "Aqua"}, {"name": "Glycerin"}, {"name": "Kathon CG"}],
+    "applicationAreas": ["CHEEKS", "FOREHEAD"]
+  }
+}
+
+### Dnevnik: juče crvenilo na obrazima, CEP javlja moguću kontaktnu reakciju (operator after[0s, 14d])
+POST {{host}}/api/diary/symptoms
+Authorization: Bearer {{demo.response.body.token}}
+Content-Type: application/json
+
+{"occurredAt": "{{$datetime iso8601 -1 d}}", "type": "ERYTHEMA", "location": "CHEEKS"}
+
+### BC primer 2: uzročnik je kathon cg (sadrži alergen), methylisothiazolinone (alergija) i methylchloroisothiazolinone (unakrsno)
+GET {{host}}/api/backward/contact-dermatitis-cause
+Authorization: Bearer {{demo.response.body.token}}
+
+### Unakrsna reaktivnost: methylchloroisothiazolinone je poznat alergen jer je u istoj grupi kao methylisothiazolinone
+GET {{host}}/api/backward/allergen-check?sastojak=methylchloroisothiazolinone
+Authorization: Bearer {{demo.response.body.token}}
+
+### Analiza: kontaktni dermatitis uz akne, napomene sa uzročnicima, hidrokortizon i emolijens
+POST {{host}}/api/analysis
+Authorization: Bearer {{demo.response.body.token}}

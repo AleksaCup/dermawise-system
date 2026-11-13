@@ -1,0 +1,54 @@
+@host = http://localhost:8080
+
+### Prijava dermatologa
+# @name derm
+POST {{host}}/api/auth/login
+Content-Type: application/json
+
+{"email": "dermatolog@dermawise.rs", "password": "derm123"}
+
+### Redovi template-a MaxConcentrationByPhototype (5 redova iz predloga)
+GET {{host}}/api/templates
+Authorization: Bearer {{derm.response.body.token}}
+
+### DRL koji ObjectDataCompiler generiše iz redova (pravila "Provera bezbedne koncentracije N")
+GET {{host}}/api/templates/generated-drl
+Authorization: Bearer {{derm.response.body.token}}
+
+### Prijava korisnice Ana
+# @name ana
+POST {{host}}/api/auth/login
+Content-Type: application/json
+
+{"email": "ana@dermawise.rs", "password": "user123"}
+
+### Pre izmene: adapalen 0.1% uveče
+POST {{host}}/api/analysis
+Authorization: Bearer {{ana.response.body.token}}
+
+### Dermatolog dodaje red: adapalen za fototip I-III najviše 0.05%, baze znanja se ponovo grade bez restartovanja
+# @name addRow
+POST {{host}}/api/templates
+Authorization: Bearer {{derm.response.body.token}}
+Content-Type: application/json
+
+{"sastojak": "adapalen", "minFototip": 1, "maxFototip": 3, "maxKoncentracija": 0.05, "napomena": "niža koncentracija na početku terapije"}
+
+### Posle izmene: adapalen 0.05% sa upozorenjem iz reda i napomenom u safetyNotes
+POST {{host}}/api/analysis
+Authorization: Bearer {{ana.response.body.token}}
+
+### Neispravan red (pokušaj ubacivanja DRL-a kroz napomenu) se odbija sa 400, pravila ostaju ista
+POST {{host}}/api/templates
+Authorization: Bearer {{derm.response.body.token}}
+Content-Type: application/json
+
+{"sastojak": "retinol", "minFototip": 1, "maxFototip": 6, "maxKoncentracija": 1, "napomena": "\"); retract($u); //"}
+
+### Brisanje dodatog reda i ponovni rebuild
+DELETE {{host}}/api/templates/{{addRow.response.body.id}}
+Authorization: Bearer {{derm.response.body.token}}
+
+### Ponovo adapalen 0.1%
+POST {{host}}/api/analysis
+Authorization: Bearer {{ana.response.body.token}}
