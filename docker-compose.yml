@@ -1,0 +1,20 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: dermawise-postgres
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-dermawise}
+      POSTGRES_USER: ${POSTGRES_USER:-dermawise}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-dermawise}
+    ports:
+      - "${POSTGRES_PORT:-5433}:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  postgres-data:
