@@ -1,6 +1,7 @@
 package com.ftn.sbnz.service.controller;
 
 import com.ftn.sbnz.service.dto.CepAlertDto;
+import com.ftn.sbnz.service.dto.RecommendationDto;
 import com.ftn.sbnz.service.security.SecurityUser;
 import com.ftn.sbnz.service.service.CepService;
 import lombok.RequiredArgsConstructor;
@@ -14,19 +15,24 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/cep/alerts")
+@RequestMapping("/api/cep")
 @RequiredArgsConstructor
 public class CepController {
 
     private final CepService cepService;
 
-    @GetMapping
+    @GetMapping("/alerts")
     public List<CepAlertDto> alerts(@AuthenticationPrincipal SecurityUser principal) {
         return cepService.alerts(principal.getUser());
     }
 
-    @PostMapping("/{id}/seen")
+    @PostMapping("/alerts/{id}/seen")
     public CepAlertDto markSeen(@AuthenticationPrincipal SecurityUser principal, @PathVariable Long id) {
         return cepService.markSeen(principal.getUser(), id);
+    }
+
+    @GetMapping("/recommendations")
+    public List<RecommendationDto> recommendations(@AuthenticationPrincipal SecurityUser principal) {
+        return cepService.recommendations(principal.getUser());
     }
 }

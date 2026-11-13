@@ -56,6 +56,13 @@ public class CepService {
         return alerts.findByUserOrderByOccurredAtDesc(user).stream().map(CepAlertDto::from).toList();
     }
 
+    @Transactional(readOnly = true)
+    public List<RecommendationDto> recommendations(AppUser user) {
+        return recommendations.findByUserAndOriginOrderByCreatedAtDesc(user, RecommendationOrigin.CEP).stream()
+                .map(RecommendationDto::from)
+                .toList();
+    }
+
     @Transactional
     public CepAlertDto markSeen(AppUser user, Long alertId) {
         CepAlertEntity alert = alerts.findById(alertId)
