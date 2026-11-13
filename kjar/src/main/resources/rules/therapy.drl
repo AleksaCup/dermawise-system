@@ -1,1 +1,375 @@
 package rules;
+
+import com.ftn.sbnz.kjar.RuleUtils;
+import com.ftn.sbnz.model.enums.Condition;
+import com.ftn.sbnz.model.enums.RosaceaSubtype;
+import com.ftn.sbnz.model.enums.RoutineSlot;
+import com.ftn.sbnz.model.enums.RoutineStep;
+import com.ftn.sbnz.model.enums.Severity;
+import com.ftn.sbnz.model.facts.Diagnosis;
+import com.ftn.sbnz.model.facts.Recommendation;
+import com.ftn.sbnz.model.facts.Referral;
+import com.ftn.sbnz.model.facts.SafetyNote;
+import com.ftn.sbnz.model.facts.User;
+import com.ftn.sbnz.model.questionnaire.LifestyleAnswers;
+
+rule "SPF 50 uz dugo izlaganje suncu"
+    @source("Fitzpatrick 1975")
+    @opis("Više od sat vremena dnevno na suncu: SPF 50 i ponovno nanošenje na 2 sata")
+    agenda-group "therapy"
+    salience 10
+when
+    User($id : id, fototip > 0)
+    LifestyleAnswers(userId == $id, dailySunMinutes > 60)
+    not Recommendation(userId == $id, step == RoutineStep.SPF)
+then
+    insert(RuleUtils.recommendation(drools.getRule(), $id, null, "SPF 50", null, "krema",
+        RoutineSlot.MORNING, RoutineStep.SPF, "svako jutro, ponoviti na 2 sata na suncu", false,
+        "Dnevno izlaganje suncu duže od sat vremena"));
+end
+
+rule "SPF 50 za fototip I-II"
+    @source("Fitzpatrick 1975")
+    @opis("Fototip I-II ima najnižu MED: SPF 50 svako jutro")
+    agenda-group "therapy"
+when
+    User($id : id, fototip in (1, 2), $tip : fototip)
+    not Recommendation(userId == $id, step == RoutineStep.SPF)
+then
+    insert(RuleUtils.recommendation(drools.getRule(), $id, null, "SPF 50", null, "krema",
+        RoutineSlot.MORNING, RoutineStep.SPF, "svako jutro", false,
+        "Fototip " + $tip + " brzo dobija opekotine"));
+end
+
+rule "SPF 30 za fototip III-VI"
+    @source("Fitzpatrick 1975")
+    @opis("Fototip III-VI: SPF 30 ili viši svako jutro")
+    agenda-group "therapy"
+when
+    User($id : id, fototip >= 3, $tip : fototip)
+    not Recommendation(userId == $id, step == RoutineStep.SPF)
+then
+    insert(RuleUtils.recommendation(drools.getRule(), $id, null, "SPF 30", null, "krema",
+        RoutineSlot.MORNING, RoutineStep.SPF, "svako jutro", false,
+        "Svakodnevna zaštita od sunca za fototip " + $tip));
+end
+
+rule "Blago čišćenje"
+    @source("Zaenglein 2016, AAD")
+    @opis("Blago sredstvo za čišćenje ujutru i uveče")
+    agenda-group "therapy"
+when
+    User($id : id, fototip > 0)
+then
+    insert(RuleUtils.recommendation(drools.getRule(), $id, null, "blago sredstvo za čišćenje", null, "gel ili krema",
+        RoutineSlot.MORNING, RoutineStep.CLEANSING, "1x ujutru", false, "Osnovna nega kože"));
+    insert(RuleUtils.recommendation(drools.getRule(), $id, null, "blago sredstvo za čišćenje", null, "gel ili krema",
+        RoutineSlot.EVENING, RoutineStep.CLEANSING, "1x uveče", false, "Osnovna nega kože"));
+end
+
+rule "Hidratacija"
+    @source("Zaenglein 2016, AAD")
+    @opis("Krema za hidrataciju ujutru i uveče")
+    agenda-group "therapy"
+when
+    User($id : id, fototip > 0)
+    not Diagnosis(userId == $id,
+                  condition in (Condition.ACNE, Condition.ROSACEA, Condition.ATOPIC_DERMATITIS, Condition.CONTACT_DERMATITIS))
+then
+    insert(RuleUtils.recommendation(drools.getRule(), $id, null, "krema za hidrataciju", null, "krema",
+        RoutineSlot.MORNING, RoutineStep.HYDRATION, "1x ujutru", false, "Osnovna nega kože"));
+    insert(RuleUtils.recommendation(drools.getRule(), $id, null, "krema za hidrataciju", null, "krema",
+        RoutineSlot.EVENING, RoutineStep.HYDRATION, "1x uveče", false, "Osnovna nega kože"));
+end
+
+rule "Hidratacija kod akni"
+    @source("Zaenglein 2016, AAD")
+    @opis("Kod akni nekomedogena hidratacija, jer topijska terapija isušuje kožu")
+    agenda-group "therapy"
+when
+    Diagnosis($id : userId, condition == Condition.ACNE)
+    not Diagnosis(userId == $id, condition in (Condition.ROSACEA, Condition.ATOPIC_DERMATITIS, Condition.CONTACT_DERMATITIS))
+then
+    insert(RuleUtils.recommendation(drools.getRule(), $id, Condition.ACNE, "nekomedogena krema za hidrataciju", null, "gel-krema",
+        RoutineSlot.MORNING, RoutineStep.HYDRATION, "1x ujutru", false, "Ne začepljuje pore, ublažava isušivanje od terapije"));
+    insert(RuleUtils.recommendation(drools.getRule(), $id, Condition.ACNE, "nekomedogena krema za hidrataciju", null, "gel-krema",
+        RoutineSlot.EVENING, RoutineStep.HYDRATION, "1x uveče", false, "Ne začepljuje pore, ublažava isušivanje od terapije"));
+end
+
+rule "Hidratacija kod rozaceje"
+    @source("van Zuuren 2019")
+    @opis("Kod rozaceje hidratacija bez mirisa za osetljivu kožu, čuva barijeru kože")
+    agenda-group "therapy"
+when
+    Diagnosis($id : userId, condition == Condition.ROSACEA)
+    not Diagnosis(userId == $id, condition in (Condition.ATOPIC_DERMATITIS, Condition.CONTACT_DERMATITIS))
+then
+    insert(RuleUtils.recommendation(drools.getRule(), $id, Condition.ROSACEA, "krema za osetljivu kožu bez mirisa", null, "krema",
+        RoutineSlot.MORNING, RoutineStep.HYDRATION, "1x ujutru", false, "Osetljiva koža kod rozaceje"));
+    insert(RuleUtils.recommendation(drools.getRule(), $id, Condition.ROSACEA, "krema za osetljivu kožu bez mirisa", null, "krema",
+        RoutineSlot.EVENING, RoutineStep.HYDRATION, "1x uveče", false, "Osetljiva koža kod rozaceje"));
+end
+
+rule "Akne blage, fototip I-III"
+    @source("Zaenglein 2016, AAD")
+    @opis("Blage akne kod fototipa I-III: topijski retinoid adapalen 0.1% uveče")
+    agenda-group "therapy"
+when
+    Diagnosis($id : userId, condition == Condition.ACNE, severity == Severity.MILD)
+    User(id == $id, fototip >= 1, fototip <= 3)
+then
+    insert(RuleUtils.recommendation(drools.getRule(), $id, Condition.ACNE, "adapalen", 0.1, "gel",
+        RoutineSlot.EVENING, RoutineStep.TREATMENT, "1x uveče", false,
+        "Topijski retinoid je prva linija za blage akne"));
+end
+
+rule "Akne blage, fototip IV-VI"
+    @source("Zaenglein 2016, AAD")
+    @opis("Blage akne kod fototipa IV-VI: azelainska kiselina 15% dva puta dnevno, manji rizik od PIH")
+    agenda-group "therapy"
+when
+    Diagnosis($id : userId, condition == Condition.ACNE, severity == Severity.MILD)
+    User(id == $id, fototip >= 4)
+then
+    insert(RuleUtils.recommendation(drools.getRule(), $id, Condition.ACNE, "azelainska kiselina", 15.0, "gel",
+        RoutineSlot.MORNING, RoutineStep.TREATMENT, "2x dnevno", true,
+        "Manji rizik od post-inflamatorne hiperpigmentacije kod tamnijeg fototipa"));
+    insert(RuleUtils.recommendation(drools.getRule(), $id, Condition.ACNE, "azelainska kiselina", 15.0, "gel",
+        RoutineSlot.EVENING, RoutineStep.TREATMENT, "2x dnevno", true,
+        "Manji rizik od post-inflamatorne hiperpigmentacije kod tamnijeg fototipa"));
+end
+
+rule "Akne umerene, fototip I-III"
+    @source("Zaenglein 2016, AAD, Tabela 4")
+    @opis("Umerene akne kod fototipa I-III: adapalen 0.1% i benzoil peroksid 2.5% (AAD prva linija)")
+    agenda-group "therapy"
+when
+    Diagnosis($id : userId, condition == Condition.ACNE, severity == Severity.MODERATE)
+    User(id == $id, fototip >= 1, fototip <= 3)
+then
+    insert(RuleUtils.recommendation(drools.getRule(), $id, Condition.ACNE, "adapalen", 0.1, "gel",
+        RoutineSlot.EVENING, RoutineStep.TREATMENT, "1x uveče", false,
+        "Kombinacija retinoida i benzoil peroksida je prva linija za umerene akne"));
+    insert(RuleUtils.recommendation(drools.getRule(), $id, Condition.ACNE, "benzoil peroksid", 2.5, "gel",
+        RoutineSlot.EVENING, RoutineStep.TREATMENT, "1x dnevno", false,
+        "Kombinacija retinoida i benzoil peroksida je prva linija za umerene akne"));
+end
+
+rule "Akne umerene, fototip IV-VI"
+    @source("Zaenglein 2016, AAD")
+    @opis("Umerene akne kod fototipa IV-VI: azelainska kiselina 15%, manji rizik od PIH")
+    agenda-group "therapy"
+when
+    Diagnosis($id : userId, condition == Condition.ACNE, severity == Severity.MODERATE)
+    User(id == $id, fototip >= 4)
+then
+    insert(RuleUtils.recommendation(drools.getRule(), $id, Condition.ACNE, "azelainska kiselina", 15.0, "gel",
+        RoutineSlot.MORNING, RoutineStep.TREATMENT, "2x dnevno", true,
+        "Manji rizik od post-inflamatorne hiperpigmentacije kod tamnijeg fototipa"));
+    insert(RuleUtils.recommendation(drools.getRule(), $id, Condition.ACNE, "azelainska kiselina", 15.0, "gel",
+        RoutineSlot.EVENING, RoutineStep.TREATMENT, "2x dnevno", true,
+        "Manji rizik od post-inflamatorne hiperpigmentacije kod tamnijeg fototipa"));
+end
+
+rule "Akne teške: benzoil peroksid za umivanje"
+    @source("Zaenglein 2016, AAD")
+    @opis("Teške akne: do pregleda kod dermatologa benzoil peroksid 2.5% za umivanje")
+    agenda-group "therapy"
+when
+    Diagnosis($id : userId, condition == Condition.ACNE, severity in (Severity.SEVERE, Severity.VERY_SEVERE))
+then
+    insert(RuleUtils.recommendation(drools.getRule(), $id, Condition.ACNE, "benzoil peroksid", 2.5, "gel za umivanje",
+        RoutineSlot.MORNING, RoutineStep.TREATMENT, "1x dnevno, isprati posle 1-2 minuta", false,
+        "Smanjuje bakterije i upalu dok se ne uvede terapija kod dermatologa"));
+end
+
+rule "Rozaceja ETR: brimonidin i niacinamid"
+    @source("van Zuuren 2019")
+    @opis("ETR rozaceja: brimonidin 0.33% gel ujutru za crvenilo i niacinamid 4% za barijeru kože")
+    agenda-group "therapy"
+when
+    Diagnosis($id : userId, condition == Condition.ROSACEA, subtype == RosaceaSubtype.ETR)
+then
+    insert(RuleUtils.recommendation(drools.getRule(), $id, Condition.ROSACEA, "brimonidin", 0.33, "gel",
+        RoutineSlot.MORNING, RoutineStep.TREATMENT, "1x ujutru", true,
+        "Sužava krvne sudove i smanjuje perzistentno crvenilo tokom dana"));
+    insert(RuleUtils.recommendation(drools.getRule(), $id, Condition.ROSACEA, "niacinamid", 4.0, "serum",
+        RoutineSlot.EVENING, RoutineStep.TREATMENT, "1x uveče", false,
+        "Jača barijeru kože i smanjuje osetljivost"));
+end
+
+rule "Rozaceja PPR blaga: azelainska kiselina"
+    @source("van Zuuren 2019")
+    @opis("Blaga papulopustularna rozaceja: azelainska kiselina 15% gel dva puta dnevno")
+    agenda-group "therapy"
+when
+    Diagnosis($id : userId, condition == Condition.ROSACEA, subtype == RosaceaSubtype.PPR, severity == Severity.MILD)
+then
+    insert(RuleUtils.recommendation(drools.getRule(), $id, Condition.ROSACEA, "azelainska kiselina", 15.0, "gel",
+        RoutineSlot.MORNING, RoutineStep.TREATMENT, "2x dnevno", true,
+        "Smanjuje papule i pustule kod rozaceje"));
+    insert(RuleUtils.recommendation(drools.getRule(), $id, Condition.ROSACEA, "azelainska kiselina", 15.0, "gel",
+        RoutineSlot.EVENING, RoutineStep.TREATMENT, "2x dnevno", true,
+        "Smanjuje papule i pustule kod rozaceje"));
+end
+
+rule "Rozaceja PPR umerena: ivermektin i metronidazol"
+    @source("van Zuuren 2019")
+    @opis("Umerena papulopustularna rozaceja: ivermektin 1% uveče i metronidazol 0.75% ujutru")
+    agenda-group "therapy"
+when
+    Diagnosis($id : userId, condition == Condition.ROSACEA, subtype == RosaceaSubtype.PPR, severity == Severity.MODERATE)
+then
+    insert(RuleUtils.recommendation(drools.getRule(), $id, Condition.ROSACEA, "ivermektin", 1.0, "krema",
+        RoutineSlot.EVENING, RoutineStep.TREATMENT, "1x uveče", true,
+        "Deluje na Demodex grinje i upalu kod papulopustularne rozaceje"));
+    insert(RuleUtils.recommendation(drools.getRule(), $id, Condition.ROSACEA, "metronidazol", 0.75, "gel",
+        RoutineSlot.MORNING, RoutineStep.TREATMENT, "1x ujutru", true,
+        "Protivupalno deluje na papule i pustule"));
+end
+
+rule "Perioralni dermatitis: prekid steroida i metronidazol"
+    @source("Wilkin 2002, NRS")
+    @opis("Perioralni dermatitis: prekid topijskog kortikosteroida i metronidazol 0.75% dva puta dnevno")
+    agenda-group "therapy"
+when
+    Diagnosis($id : userId, condition == Condition.PERIORAL_DERMATITIS)
+then
+    insert(new SafetyNote($id,
+        "Prekinuti topijski kortikosteroid na licu. U prvim nedeljama posle prekida stanje može prolazno da se pogorša.",
+        RuleUtils.source(drools.getRule())));
+    insert(RuleUtils.recommendation(drools.getRule(), $id, Condition.PERIORAL_DERMATITIS, "metronidazol", 0.75, "gel",
+        RoutineSlot.MORNING, RoutineStep.TREATMENT, "2x dnevno", true,
+        "Leči perioralni dermatitis posle prekida steroida"));
+    insert(RuleUtils.recommendation(drools.getRule(), $id, Condition.PERIORAL_DERMATITIS, "metronidazol", 0.75, "gel",
+        RoutineSlot.EVENING, RoutineStep.TREATMENT, "2x dnevno", true,
+        "Leči perioralni dermatitis posle prekida steroida"));
+end
+
+rule "Emolijens kod atopijskog ili kontaktnog dermatitisa"
+    @source("Sidbury 2014, AAD")
+    @opis("Atopijski ili kontaktni dermatitis: emolijens bez mirisa dva puta dnevno obnavlja barijeru kože")
+    agenda-group "therapy"
+when
+    User($id : id)
+    exists Diagnosis(userId == $id, condition in (Condition.ATOPIC_DERMATITIS, Condition.CONTACT_DERMATITIS))
+then
+    insert(RuleUtils.recommendation(drools.getRule(), $id, null, "emolijens bez mirisa", null, "krema",
+        RoutineSlot.MORNING, RoutineStep.HYDRATION, "2x dnevno", false,
+        "Obnavlja oštećenu barijeru kože"));
+    insert(RuleUtils.recommendation(drools.getRule(), $id, null, "emolijens bez mirisa", null, "krema",
+        RoutineSlot.EVENING, RoutineStep.HYDRATION, "2x dnevno", false,
+        "Obnavlja oštećenu barijeru kože"));
+end
+
+rule "Atopijski dermatitis umeren: hidrokortizon"
+    @source("Sidbury 2014, AAD")
+    @opis("Umeren atopijski dermatitis: hidrokortizon 1% najviše 7 dana, zatim dermatolog ako nema poboljšanja")
+    agenda-group "therapy"
+when
+    Diagnosis($id : userId, condition == Condition.ATOPIC_DERMATITIS, severity == Severity.MODERATE)
+    not Recommendation(userId == $id, sastojak == "hidrokortizon")
+then
+    insert(RuleUtils.recommendation(drools.getRule(), $id, Condition.ATOPIC_DERMATITIS, "hidrokortizon", 1.0, "krema",
+        RoutineSlot.EVENING, RoutineStep.TREATMENT, "1x dnevno, najviše 7 dana", false,
+        "Kratko smiruje upalu i svrab. Ako posle 7 dana nema poboljšanja, javiti se dermatologu."));
+end
+
+rule "Seboroični dermatitis: cink pirition"
+    @source("Klinička praksa, seboroični dermatitis")
+    @opis("Seboroični dermatitis: cink pirition 1% na zahvaćena mesta tri puta nedeljno")
+    agenda-group "therapy"
+when
+    Diagnosis($id : userId, condition == Condition.SEBORRHEIC_DERMATITIS)
+then
+    insert(RuleUtils.recommendation(drools.getRule(), $id, Condition.SEBORRHEIC_DERMATITIS, "cink pirition", 1.0,
+        "šampon ili gel za umivanje", RoutineSlot.EVENING, RoutineStep.CLEANSING,
+        "3x nedeljno na zahvaćena mesta", false,
+        "Deluje protiv gljivice Malassezia i smanjuje ljuspanje"));
+end
+
+rule "Kontaktni dermatitis: prekid proizvoda i hidrokortizon"
+    @source("Klinička praksa, kontaktni dermatitis")
+    @opis("Kontaktni dermatitis: prekid proizvoda koji izaziva reakciju i hidrokortizon 1% najviše 7 dana")
+    agenda-group "therapy"
+when
+    Diagnosis($id : userId, condition == Condition.CONTACT_DERMATITIS)
+    not Recommendation(userId == $id, sastojak == "hidrokortizon")
+then
+    insert(new SafetyNote($id, "Prekinuti proizvod koji je izazvao reakciju.", RuleUtils.source(drools.getRule())));
+    insert(RuleUtils.recommendation(drools.getRule(), $id, Condition.CONTACT_DERMATITIS, "hidrokortizon", 1.0, "krema",
+        RoutineSlot.EVENING, RoutineStep.TREATMENT, "1x dnevno, najviše 7 dana", false,
+        "Kratko smiruje reakciju na koži. Ako posle 7 dana nema poboljšanja, javiti se dermatologu."));
+end
+
+rule "Uput: teške akne"
+    @source("Zaenglein 2016, AAD")
+    @opis("Teške i vrlo teške akne leči dermatolog oralnom terapijom")
+    agenda-group "therapy"
+when
+    Diagnosis($id : userId, condition == Condition.ACNE, severity in (Severity.SEVERE, Severity.VERY_SEVERE))
+    not Referral(userId == $id, forCondition == Condition.ACNE, specialist == "dermatolog")
+then
+    insert(RuleUtils.referral(drools.getRule(), $id, Condition.ACNE, "dermatolog",
+        "Teške akne zahtevaju oralnu terapiju (oralni antibiotik ili izotretinoin) koju propisuje dermatolog."));
+end
+
+rule "Uput: teška papulopustularna rozaceja"
+    @source("van Zuuren 2019")
+    @opis("Teška PPR rozaceja zahteva oralnu terapiju kod dermatologa")
+    agenda-group "therapy"
+when
+    Diagnosis($id : userId, condition == Condition.ROSACEA, subtype == RosaceaSubtype.PPR, severity == Severity.SEVERE)
+    not Referral(userId == $id, forCondition == Condition.ROSACEA, specialist == "dermatolog")
+then
+    insert(RuleUtils.referral(drools.getRule(), $id, Condition.ROSACEA, "dermatolog",
+        "Teška papulopustularna rozaceja zahteva oralnu terapiju (npr. doksiciklin) koju propisuje dermatolog."));
+end
+
+rule "Uput: fimatozna rozaceja"
+    @source("van Zuuren 2019")
+    @opis("Fimatozne promene se leče laserom ili hirurški")
+    agenda-group "therapy"
+when
+    Diagnosis($id : userId, condition == Condition.ROSACEA, subtype == RosaceaSubtype.PHYMATOUS)
+    not Referral(userId == $id, forCondition == Condition.ROSACEA, specialist == "dermatolog")
+then
+    insert(RuleUtils.referral(drools.getRule(), $id, Condition.ROSACEA, "dermatolog",
+        "Zadebljanje kože kod rozaceje ne prolazi topijskom terapijom, leči se laserom ili hirurški."));
+end
+
+rule "Uput: okularna rozaceja, dermatolog"
+    @source("van Zuuren 2019")
+    @opis("Okularna rozaceja zahteva lečenje kod dermatologa")
+    agenda-group "therapy"
+when
+    Diagnosis($id : userId, condition == Condition.ROSACEA, subtype == RosaceaSubtype.OCULAR)
+    not Referral(userId == $id, forCondition == Condition.ROSACEA, specialist == "dermatolog")
+then
+    insert(RuleUtils.referral(drools.getRule(), $id, Condition.ROSACEA, "dermatolog",
+        "Rozaceja sa simptomima oka zahteva lečenje kod dermatologa."));
+end
+
+rule "Uput: okularna rozaceja, oftalmolog"
+    @source("van Zuuren 2019")
+    @opis("Simptomi oka kod rozaceje zahtevaju pregled oftalmologa")
+    agenda-group "therapy"
+when
+    Diagnosis($id : userId, condition == Condition.ROSACEA, subtype == RosaceaSubtype.OCULAR)
+    not Referral(userId == $id, forCondition == Condition.ROSACEA, specialist == "oftalmolog")
+then
+    insert(RuleUtils.referral(drools.getRule(), $id, Condition.ROSACEA, "oftalmolog",
+        "Simptomi oka kod rozaceje mogu da oštete rožnjaču, potreban je pregled oftalmologa."));
+end
+
+rule "Uput: težak atopijski dermatitis"
+    @source("Sidbury 2014, AAD")
+    @opis("Težak atopijski dermatitis leči dermatolog sistemskom terapijom ili fototerapijom")
+    agenda-group "therapy"
+when
+    Diagnosis($id : userId, condition == Condition.ATOPIC_DERMATITIS, severity == Severity.SEVERE)
+    not Referral(userId == $id, forCondition == Condition.ATOPIC_DERMATITIS, specialist == "dermatolog")
+then
+    insert(RuleUtils.referral(drools.getRule(), $id, Condition.ATOPIC_DERMATITIS, "dermatolog",
+        "SCORAD iznad 50 zahteva sistemsku terapiju ili fototerapiju koju vodi dermatolog."));
+end
