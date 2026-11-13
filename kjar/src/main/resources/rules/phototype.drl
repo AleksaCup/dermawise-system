@@ -2,18 +2,56 @@ package rules;
 
 import java.util.Set;
 
+import com.ftn.sbnz.model.enums.EthnicOrigin;
+import com.ftn.sbnz.model.enums.EyeColor;
+import com.ftn.sbnz.model.enums.HairColor;
 import com.ftn.sbnz.model.enums.SkinColor;
 import com.ftn.sbnz.model.enums.SunReaction;
 import com.ftn.sbnz.model.enums.TanTendency;
 import com.ftn.sbnz.model.facts.DataReady;
 import com.ftn.sbnz.model.facts.MEDValue;
 import com.ftn.sbnz.model.facts.QuestionnaireSubmitted;
+import com.ftn.sbnz.model.facts.SafetyNote;
 import com.ftn.sbnz.model.facts.User;
 import com.ftn.sbnz.model.questionnaire.LifestyleAnswers;
 import com.ftn.sbnz.model.questionnaire.PhototypeAnswers;
 import com.ftn.sbnz.model.questionnaire.RegionLesion;
 import com.ftn.sbnz.model.questionnaire.RosaceaAnswers;
 import com.ftn.sbnz.model.questionnaire.ScoradAnswers;
+
+function int lightMarkers(PhototypeAnswers a) {
+    int count = 0;
+    if (a.getSkinColor() == SkinColor.VERY_FAIR || a.getSkinColor() == SkinColor.FAIR) {
+        count++;
+    }
+    if (a.getEyeColor() == EyeColor.BLUE || a.getEyeColor() == EyeColor.GREY || a.getEyeColor() == EyeColor.GREEN) {
+        count++;
+    }
+    if (a.getHairColor() == HairColor.RED || a.getHairColor() == HairColor.BLONDE) {
+        count++;
+    }
+    if (a.getEthnicOrigin() == EthnicOrigin.NORTHERN_EUROPEAN) {
+        count++;
+    }
+    return count;
+}
+
+function int darkMarkers(PhototypeAnswers a) {
+    int count = 0;
+    if (a.getSkinColor() == SkinColor.DARK_BROWN || a.getSkinColor() == SkinColor.BLACK) {
+        count++;
+    }
+    if (a.getEyeColor() == EyeColor.DARK_BROWN) {
+        count++;
+    }
+    if (a.getHairColor() == HairColor.BLACK) {
+        count++;
+    }
+    if (a.getEthnicOrigin() == EthnicOrigin.AFRICAN) {
+        count++;
+    }
+    return count;
+}
 
 rule "Upitnik spreman"
     @source("DermaWise upitnik")
@@ -116,4 +154,30 @@ when
     MEDValue(fototip == $tip, $med : value)
 then
     modify($u) { setMed($med) }
+end
+
+rule "Svetla predispozicija uz tamni fototip"
+    @source("Fitzpatrick 1975")
+    @opis("Boja kože, očiju, kose i poreklo ukazuju na svetliji tip od izračunatog")
+    agenda-group "phototype"
+when
+    $a : PhototypeAnswers($id : userId, lightMarkers(this) >= 3)
+    User(id == $id, fototip >= 5, $tip : fototip) @watch(fototip)
+then
+    insert(new SafetyNote($id,
+        "Boja kože, očiju i kose ne odgovara fototipu " + $tip + ". Proverite odgovor o reakciji na sunce.",
+        "Fitzpatrick 1975"));
+end
+
+rule "Tamna predispozicija uz svetli fototip"
+    @source("Fitzpatrick 1975")
+    @opis("Boja kože, očiju, kose i poreklo ukazuju na tamniji tip od izračunatog")
+    agenda-group "phototype"
+when
+    $a : PhototypeAnswers($id : userId, darkMarkers(this) >= 3)
+    User(id == $id, fototip > 0, fototip <= 2, $tip : fototip) @watch(fototip)
+then
+    insert(new SafetyNote($id,
+        "Boja kože, očiju i kose ne odgovara fototipu " + $tip + ". Proverite odgovor o reakciji na sunce.",
+        "Fitzpatrick 1975"));
 end
