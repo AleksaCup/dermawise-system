@@ -14,8 +14,10 @@ import com.ftn.sbnz.model.facts.ExcludedDiagnosis;
 import com.ftn.sbnz.model.facts.Nalaz;
 import com.ftn.sbnz.model.facts.NalazCode;
 import com.ftn.sbnz.model.facts.RosaceaPrimaryCriterion;
+import com.ftn.sbnz.model.facts.SafetyNote;
 import com.ftn.sbnz.model.facts.SeverityCategory;
 import com.ftn.sbnz.model.facts.SeverityScore;
+import com.ftn.sbnz.model.questionnaire.LifestyleAnswers;
 import com.ftn.sbnz.model.questionnaire.RegionLesion;
 import com.ftn.sbnz.model.questionnaire.RosaceaAnswers;
 import com.ftn.sbnz.model.questionnaire.ScoradAnswers;
@@ -455,4 +457,18 @@ when
 then
     insert(new ExcludedDiagnosis($id, Condition.ATOPIC_DERMATITIS,
         "SCORAD je 0, nema zahvaćene površine, znakova ni svraba."));
+end
+
+rule "Hormonska terapija uz umerene ili teže akne"
+    @source("Zaenglein 2016, AAD")
+    @opis("Hormonska terapija može da utiče na akne, kod umerenih i težih akni potrebna je konsultacija")
+    agenda-group "diagnosis"
+when
+    Diagnosis($id : userId, condition == Condition.ACNE,
+              severity in (Severity.MODERATE, Severity.SEVERE, Severity.VERY_SEVERE))
+    LifestyleAnswers(userId == $id, hormonalTherapy)
+then
+    insert(new SafetyNote($id,
+        "Uz umerene ili teže akne prijavljena je hormonska terapija. Hormoni mogu da utiču na akne, pre lečenja se preporučuje konsultacija sa dermatologom.",
+        "Zaenglein 2016, AAD"));
 end
