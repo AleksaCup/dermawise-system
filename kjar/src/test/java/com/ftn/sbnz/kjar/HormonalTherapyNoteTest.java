@@ -39,7 +39,9 @@ class HormonalTherapyNoteTest {
     private List<SafetyNote> notes(Questionnaires questionnaire) {
         try (AnalysisSession session = new AnalysisSession()) {
             session.insertAll(questionnaire.facts()).fire();
-            return session.all(SafetyNote.class);
+            return session.all(SafetyNote.class).stream()
+                    .filter(n -> n.getText().contains("hormonska terapija"))
+                    .toList();
         }
     }
 }

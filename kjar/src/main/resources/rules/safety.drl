@@ -2,6 +2,7 @@ package rules;
 
 import com.ftn.sbnz.kjar.RuleUtils;
 import com.ftn.sbnz.model.enums.RecommendationStatus;
+import com.ftn.sbnz.model.enums.RoutineSlot;
 import com.ftn.sbnz.model.enums.RoutineStep;
 import com.ftn.sbnz.model.facts.Recommendation;
 import com.ftn.sbnz.model.facts.SafetyNote;
@@ -95,5 +96,28 @@ then
     }
     insert(new SafetyNote($id,
         velikoSlovo($sastojak) + " povučen - " + razlog($u) + ", potrebna je konsultacija sa dermatologom",
+        RuleUtils.source(drools.getRule())));
+end
+
+rule "Benzoil peroksid i retinoid u istoj rutini"
+    @source("Pravila kompatibilnosti aktivnih sastojaka")
+    @opis("Benzoil peroksid i retinoid u istom terminu se razdvajaju: benzoil peroksid ujutru, retinoid uveče")
+    agenda-group "safety"
+    salience 10
+when
+    $bp : Recommendation($id : userId, sastojak == "benzoil peroksid", $slot : slot,
+                         status not in (RecommendationStatus.WITHDRAWN, RecommendationStatus.REJECTED))
+    $retinoid : Recommendation(userId == $id, this != $bp, slot == $slot, $sastojak : sastojak,
+                               status not in (RecommendationStatus.WITHDRAWN, RecommendationStatus.REJECTED))
+    pripada($sastojak, "retinoidi";)
+then
+    modify($bp) {
+        setSlot(RoutineSlot.MORNING),
+        addWarning("Premešteno u jutarnju rutinu, odvojeno od retinoida")
+    }
+    modify($retinoid) { setSlot(RoutineSlot.EVENING) }
+    insert(new SafetyNote($id,
+        "Benzoil peroksid i " + $sastojak + " razdvojeni: benzoil peroksid ujutru, " + $sastojak
+            + " uveče, jer benzoil peroksid razgrađuje retinoide",
         RuleUtils.source(drools.getRule())));
 end
