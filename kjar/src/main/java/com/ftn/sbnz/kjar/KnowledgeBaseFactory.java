@@ -1,5 +1,6 @@
 package com.ftn.sbnz.kjar;
 
+import com.ftn.sbnz.kjar.template.SeverityCategoryRows;
 import org.kie.api.KieBase;
 import org.kie.api.builder.Message;
 import org.kie.api.builder.Results;
@@ -8,6 +9,7 @@ import org.kie.api.io.ResourceType;
 import org.kie.internal.io.ResourceFactory;
 import org.kie.internal.utils.KieHelper;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -29,10 +31,22 @@ public class KnowledgeBaseFactory {
             "rules/safety.drl",
             "rules/backward.drl");
 
+    public static final String SEVERITY_TEMPLATE = "templates/SeverityCategory.drt";
+
+    private final String severityCategoryDrl;
+
+    public KnowledgeBaseFactory() {
+        severityCategoryDrl = new TemplateCompiler().compile(SEVERITY_TEMPLATE, SeverityCategoryRows.load());
+    }
+
     public KnowledgeBases buildAll(List<String> generatedDrl) {
+        List<String> analysisDrl = new ArrayList<>();
+        analysisDrl.add(severityCategoryDrl);
+        analysisDrl.addAll(generatedDrl);
+
         return new KnowledgeBases(
-                build(ANALYSIS_RULES, generatedDrl, EventProcessingOption.CLOUD),
-                build(BACKWARD_RULES, List.of(), EventProcessingOption.CLOUD),
+                build(ANALYSIS_RULES, analysisDrl, EventProcessingOption.CLOUD),
+                build(BACKWARD_RULES, List.of(severityCategoryDrl), EventProcessingOption.CLOUD),
                 build(CEP_RULES, generatedDrl, EventProcessingOption.STREAM));
     }
 

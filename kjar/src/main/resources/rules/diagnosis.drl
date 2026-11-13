@@ -1,6 +1,9 @@
 package rules;
 
+import com.ftn.sbnz.model.enums.Condition;
 import com.ftn.sbnz.model.facts.DataReady;
+import com.ftn.sbnz.model.facts.Diagnosis;
+import com.ftn.sbnz.model.facts.SeverityCategory;
 import com.ftn.sbnz.model.facts.SeverityScore;
 import com.ftn.sbnz.model.questionnaire.RegionLesion;
 
@@ -16,4 +19,16 @@ when
         sum($region.getWeight() * $lesion.getGrade()))
 then
     insert(new SeverityScore($id, "GAGS", $gags));
+end
+
+rule "Akne prema GAGS kategoriji"
+    @source("Doshi 1997, GAGS")
+    @opis("Dijagnoza akni sa težinom iz GAGS kategorije")
+    agenda-group "diagnosis"
+when
+    SeverityCategory($id : userId, scale == "GAGS", $severity : severity)
+    SeverityScore(userId == $id, scale == "GAGS", $gags : value)
+    not Diagnosis(userId == $id, condition == Condition.ACNE)
+then
+    insert(new Diagnosis($id, Condition.ACNE, $severity, null, $gags));
 end
