@@ -1,1 +1,107 @@
 package rules;
+
+import com.ftn.sbnz.kjar.RuleUtils;
+import com.ftn.sbnz.model.enums.Condition;
+import com.ftn.sbnz.model.enums.RoutineSlot;
+import com.ftn.sbnz.model.enums.RoutineStep;
+import com.ftn.sbnz.model.facts.Diagnosis;
+import com.ftn.sbnz.model.facts.Recommendation;
+import com.ftn.sbnz.model.facts.User;
+import com.ftn.sbnz.model.questionnaire.LifestyleAnswers;
+
+rule "SPF 50 uz dugo izlaganje suncu"
+    @source("Fitzpatrick 1975")
+    @opis("Više od sat vremena dnevno na suncu: SPF 50 i ponovno nanošenje na 2 sata")
+    agenda-group "therapy"
+    salience 10
+when
+    User($id : id, fototip > 0)
+    LifestyleAnswers(userId == $id, dailySunMinutes > 60)
+    not Recommendation(userId == $id, step == RoutineStep.SPF)
+then
+    insert(RuleUtils.recommendation(drools.getRule(), $id, null, "SPF 50", null, "krema",
+        RoutineSlot.MORNING, RoutineStep.SPF, "svako jutro, ponoviti na 2 sata na suncu", false,
+        "Dnevno izlaganje suncu duže od sat vremena"));
+end
+
+rule "SPF 50 za fototip I-II"
+    @source("Fitzpatrick 1975")
+    @opis("Fototip I-II ima najnižu MED: SPF 50 svako jutro")
+    agenda-group "therapy"
+when
+    User($id : id, fototip in (1, 2), $tip : fototip)
+    not Recommendation(userId == $id, step == RoutineStep.SPF)
+then
+    insert(RuleUtils.recommendation(drools.getRule(), $id, null, "SPF 50", null, "krema",
+        RoutineSlot.MORNING, RoutineStep.SPF, "svako jutro", false,
+        "Fototip " + $tip + " brzo dobija opekotine"));
+end
+
+rule "SPF 30 za fototip III-VI"
+    @source("Fitzpatrick 1975")
+    @opis("Fototip III-VI: SPF 30 ili viši svako jutro")
+    agenda-group "therapy"
+when
+    User($id : id, fototip >= 3, $tip : fototip)
+    not Recommendation(userId == $id, step == RoutineStep.SPF)
+then
+    insert(RuleUtils.recommendation(drools.getRule(), $id, null, "SPF 30", null, "krema",
+        RoutineSlot.MORNING, RoutineStep.SPF, "svako jutro", false,
+        "Svakodnevna zaštita od sunca za fototip " + $tip));
+end
+
+rule "Blago čišćenje"
+    @source("Zaenglein 2016, AAD")
+    @opis("Blago sredstvo za čišćenje ujutru i uveče")
+    agenda-group "therapy"
+when
+    User($id : id, fototip > 0)
+then
+    insert(RuleUtils.recommendation(drools.getRule(), $id, null, "blago sredstvo za čišćenje", null, "gel ili krema",
+        RoutineSlot.MORNING, RoutineStep.CLEANSING, "1x ujutru", false, "Osnovna nega kože"));
+    insert(RuleUtils.recommendation(drools.getRule(), $id, null, "blago sredstvo za čišćenje", null, "gel ili krema",
+        RoutineSlot.EVENING, RoutineStep.CLEANSING, "1x uveče", false, "Osnovna nega kože"));
+end
+
+rule "Hidratacija"
+    @source("Zaenglein 2016, AAD")
+    @opis("Krema za hidrataciju ujutru i uveče")
+    agenda-group "therapy"
+when
+    User($id : id, fototip > 0)
+    not Diagnosis(userId == $id,
+                  condition in (Condition.ACNE, Condition.ROSACEA, Condition.ATOPIC_DERMATITIS, Condition.CONTACT_DERMATITIS))
+then
+    insert(RuleUtils.recommendation(drools.getRule(), $id, null, "krema za hidrataciju", null, "krema",
+        RoutineSlot.MORNING, RoutineStep.HYDRATION, "1x ujutru", false, "Osnovna nega kože"));
+    insert(RuleUtils.recommendation(drools.getRule(), $id, null, "krema za hidrataciju", null, "krema",
+        RoutineSlot.EVENING, RoutineStep.HYDRATION, "1x uveče", false, "Osnovna nega kože"));
+end
+
+rule "Hidratacija kod akni"
+    @source("Zaenglein 2016, AAD")
+    @opis("Kod akni nekomedogena hidratacija, jer topijska terapija isušuje kožu")
+    agenda-group "therapy"
+when
+    Diagnosis($id : userId, condition == Condition.ACNE)
+    not Diagnosis(userId == $id, condition in (Condition.ROSACEA, Condition.ATOPIC_DERMATITIS, Condition.CONTACT_DERMATITIS))
+then
+    insert(RuleUtils.recommendation(drools.getRule(), $id, Condition.ACNE, "nekomedogena krema za hidrataciju", null, "gel-krema",
+        RoutineSlot.MORNING, RoutineStep.HYDRATION, "1x ujutru", false, "Ne začepljuje pore, ublažava isušivanje od terapije"));
+    insert(RuleUtils.recommendation(drools.getRule(), $id, Condition.ACNE, "nekomedogena krema za hidrataciju", null, "gel-krema",
+        RoutineSlot.EVENING, RoutineStep.HYDRATION, "1x uveče", false, "Ne začepljuje pore, ublažava isušivanje od terapije"));
+end
+
+rule "Hidratacija kod rozaceje"
+    @source("van Zuuren 2019")
+    @opis("Kod rozaceje hidratacija bez mirisa za osetljivu kožu, čuva barijeru kože")
+    agenda-group "therapy"
+when
+    Diagnosis($id : userId, condition == Condition.ROSACEA)
+    not Diagnosis(userId == $id, condition in (Condition.ATOPIC_DERMATITIS, Condition.CONTACT_DERMATITIS))
+then
+    insert(RuleUtils.recommendation(drools.getRule(), $id, Condition.ROSACEA, "krema za osetljivu kožu bez mirisa", null, "krema",
+        RoutineSlot.MORNING, RoutineStep.HYDRATION, "1x ujutru", false, "Osetljiva koža kod rozaceje"));
+    insert(RuleUtils.recommendation(drools.getRule(), $id, Condition.ROSACEA, "krema za osetljivu kožu bez mirisa", null, "krema",
+        RoutineSlot.EVENING, RoutineStep.HYDRATION, "1x uveče", false, "Osetljiva koža kod rozaceje"));
+end
