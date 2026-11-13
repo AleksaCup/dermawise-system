@@ -40,7 +40,7 @@ public class KnowledgeBaseFactory {
         KieHelper helper = new KieHelper();
         ClassLoader classLoader = getClass().getClassLoader();
         for (String file : ruleFiles) {
-            helper.addResource(ResourceFactory.newClassPathResource(file, classLoader), ResourceType.DRL);
+            helper.addResource(ResourceFactory.newClassPathResource(file, "UTF-8", classLoader), ResourceType.DRL);
         }
         for (int i = 0; i < generatedDrl.size(); i++) {
             helper.addContent(generatedDrl.get(i), "rules/generated" + i + ".drl");
