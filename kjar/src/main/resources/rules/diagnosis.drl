@@ -310,3 +310,18 @@ when
 then
     insert(new Diagnosis($id, Condition.ROSACEA, rosaceaSeverity($answers), RosaceaSubtype.OCULAR, null));
 end
+
+rule "Perioralni dermatitis"
+    @source("Wilkin 2002, NRS")
+    @opis("Papule oko usta, bez telangiektazija, posle topijskog kortikosteroida: perioralni dermatitis")
+    agenda-group "diagnosis"
+when
+    DataReady($id : userId)
+    Nalaz(userId == $id, code == NalazCode.PERIORALNE_PAPULE)
+    Nalaz(userId == $id, code == NalazCode.PERIORALNA_DISTRIBUCIJA)
+    not Nalaz(userId == $id, code == NalazCode.TELANGIEKTAZIJE)
+    Nalaz(userId == $id, code == NalazCode.SKORASNJI_STEROID)
+    not Diagnosis(userId == $id, condition == Condition.PERIORAL_DERMATITIS)
+then
+    insert(new Diagnosis($id, Condition.PERIORAL_DERMATITIS, null, null, null));
+end
