@@ -170,6 +170,19 @@ then
     insert(new Nalaz($id, NalazCode.FLUSHING_UPITNIK));
 end
 
+rule "Nalaz flushing iz dnevnika"
+    @source("Wilkin 2002, NRS")
+    @opis("Backward upit TranzijentniEritem: bar dve epizode u 7 dana uz tipičan okidač")
+    agenda-group "diagnosis"
+    salience 30
+when
+    DataReady($id : userId)
+    TranzijentniEritem($id;)
+    not Nalaz(userId == $id, code == NalazCode.FLUSHING_DNEVNIK)
+then
+    insert(new Nalaz($id, NalazCode.FLUSHING_DNEVNIK));
+end
+
 rule "Nalaz okularni simptomi"
     @source("Wilkin 2002, NRS")
     @opis("Prijavljeni simptomi oka (peckanje, crvenilo, suvoća)")
@@ -237,14 +250,15 @@ end
 
 rule "Primarni kriterijum rozaceje"
     @source("Wilkin 2002, NRS")
-    @opis("Perzistentni eritem sa centrofacijalnom distribucijom uz telangiektazije ili čest flushing")
+    @opis("Perzistentni eritem sa centrofacijalnom distribucijom uz telangiektazije ili čest flushing (upitnik ili dnevnik)")
     agenda-group "diagnosis"
     salience 20
 when
     DataReady($id : userId)
     Nalaz(userId == $id, code == NalazCode.PERZISTENTNI_ERITEM)
     Nalaz(userId == $id, code == NalazCode.CENTROFACIJALNA_DISTRIBUCIJA)
-    exists Nalaz(userId == $id, code in (NalazCode.TELANGIEKTAZIJE, NalazCode.FLUSHING_UPITNIK))
+    exists Nalaz(userId == $id,
+                 code in (NalazCode.TELANGIEKTAZIJE, NalazCode.FLUSHING_UPITNIK, NalazCode.FLUSHING_DNEVNIK))
     not RosaceaPrimaryCriterion(userId == $id)
 then
     insert(new RosaceaPrimaryCriterion($id));
@@ -280,11 +294,11 @@ end
 
 rule "Rozaceja ETR uz flushing"
     @source("Wilkin 2002, NRS")
-    @opis("Perzistentni eritem, flushing bar dva puta nedeljno i bez komedona: eritematoteleangiektatični podtip")
+    @opis("Perzistentni eritem, flushing bar dva puta nedeljno (upitnik ili dnevnik) i bez komedona: eritematoteleangiektatični podtip")
     agenda-group "diagnosis"
 when
     RosaceaPrimaryCriterion($id : userId)
-    Nalaz(userId == $id, code == NalazCode.FLUSHING_UPITNIK)
+    exists Nalaz(userId == $id, code in (NalazCode.FLUSHING_UPITNIK, NalazCode.FLUSHING_DNEVNIK))
     not Nalaz(userId == $id, code == NalazCode.KOMEDONI)
     $answers : RosaceaAnswers(userId == $id, papuleCount < Thresholds.PPR_MIN_PAPULES)
     not Diagnosis(userId == $id, condition == Condition.ROSACEA, subtype == RosaceaSubtype.ETR)
@@ -410,7 +424,8 @@ rule "Isključena rozaceja: nema centrofacijalne distribucije"
 when
     DataReady($id : userId)
     exists Nalaz(userId == $id, code in (NalazCode.PERZISTENTNI_ERITEM, NalazCode.TELANGIEKTAZIJE,
-                                         NalazCode.FLUSHING_UPITNIK, NalazCode.PAPULE_PUSTULE_BEZ_KOMEDONA))
+                                         NalazCode.FLUSHING_UPITNIK, NalazCode.FLUSHING_DNEVNIK,
+                                         NalazCode.PAPULE_PUSTULE_BEZ_KOMEDONA))
     not Nalaz(userId == $id, code == NalazCode.CENTROFACIJALNA_DISTRIBUCIJA)
     not ExcludedDiagnosis(userId == $id, condition == Condition.ROSACEA)
 then

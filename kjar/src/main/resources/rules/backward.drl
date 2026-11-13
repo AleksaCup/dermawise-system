@@ -5,6 +5,7 @@ import com.ftn.sbnz.model.diary.FlushingSummary;
 import com.ftn.sbnz.model.enums.FlushTrigger;
 import com.ftn.sbnz.model.facts.Dokazuje;
 import com.ftn.sbnz.model.facts.Nalaz;
+import com.ftn.sbnz.model.facts.SeverityScore;
 
 query dokazano(String korisnik, String cilj, String preko)
     Nalaz(korisnik, cilj; preko := code)
@@ -19,4 +20,22 @@ end
 query TranzijentniEritem(String korisnik)
     $summary : FlushingSummary(korisnik; last7Days >= Thresholds.FLUSHING_PER_WEEK)
     exists FlushTrigger(this in (FlushTrigger.HRANA, FlushTrigger.ALKOHOL, FlushTrigger.TOPLOTA)) from $summary.triggers
+end
+
+query imaRosaceju(String korisnik)
+    PrimarniZnakRosaceje(korisnik, $znak;)
+    Nalaz(korisnik, "CENTROFACIJALNA_DISTRIBUCIJA";)
+    not Nalaz(korisnik, "KOMEDONI";)
+end
+
+query imaAkne(String korisnik)
+    Nalaz(korisnik, "KOMEDONI"; $znak : code)
+    SeverityScore(userId == korisnik, scale == "GAGS", value > 0)
+end
+
+query imaPerioralniDermatitis(String korisnik)
+    Nalaz(korisnik, "PERIORALNE_PAPULE";)
+    Nalaz(korisnik, "PERIORALNA_DISTRIBUCIJA";)
+    not Nalaz(korisnik, "TELANGIEKTAZIJE";)
+    Nalaz(korisnik, "SKORASNJI_STEROID"; $znak : code)
 end
