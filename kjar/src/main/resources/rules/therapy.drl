@@ -2,11 +2,13 @@ package rules;
 
 import com.ftn.sbnz.kjar.RuleUtils;
 import com.ftn.sbnz.model.enums.Condition;
+import com.ftn.sbnz.model.enums.RosaceaSubtype;
 import com.ftn.sbnz.model.enums.RoutineSlot;
 import com.ftn.sbnz.model.enums.RoutineStep;
 import com.ftn.sbnz.model.enums.Severity;
 import com.ftn.sbnz.model.facts.Diagnosis;
 import com.ftn.sbnz.model.facts.Recommendation;
+import com.ftn.sbnz.model.facts.SafetyNote;
 import com.ftn.sbnz.model.facts.User;
 import com.ftn.sbnz.model.questionnaire.LifestyleAnswers;
 
@@ -178,4 +180,67 @@ then
     insert(RuleUtils.recommendation(drools.getRule(), $id, Condition.ACNE, "benzoil peroksid", 2.5, "gel za umivanje",
         RoutineSlot.MORNING, RoutineStep.TREATMENT, "1x dnevno, isprati posle 1-2 minuta", false,
         "Smanjuje bakterije i upalu dok se ne uvede terapija kod dermatologa"));
+end
+
+rule "Rozaceja ETR: brimonidin i niacinamid"
+    @source("van Zuuren 2019")
+    @opis("ETR rozaceja: brimonidin 0.33% gel ujutru za crvenilo i niacinamid 4% za barijeru kože")
+    agenda-group "therapy"
+when
+    Diagnosis($id : userId, condition == Condition.ROSACEA, subtype == RosaceaSubtype.ETR)
+then
+    insert(RuleUtils.recommendation(drools.getRule(), $id, Condition.ROSACEA, "brimonidin", 0.33, "gel",
+        RoutineSlot.MORNING, RoutineStep.TREATMENT, "1x ujutru", true,
+        "Sužava krvne sudove i smanjuje perzistentno crvenilo tokom dana"));
+    insert(RuleUtils.recommendation(drools.getRule(), $id, Condition.ROSACEA, "niacinamid", 4.0, "serum",
+        RoutineSlot.EVENING, RoutineStep.TREATMENT, "1x uveče", false,
+        "Jača barijeru kože i smanjuje osetljivost"));
+end
+
+rule "Rozaceja PPR blaga: azelainska kiselina"
+    @source("van Zuuren 2019")
+    @opis("Blaga papulopustularna rozaceja: azelainska kiselina 15% gel dva puta dnevno")
+    agenda-group "therapy"
+when
+    Diagnosis($id : userId, condition == Condition.ROSACEA, subtype == RosaceaSubtype.PPR, severity == Severity.MILD)
+then
+    insert(RuleUtils.recommendation(drools.getRule(), $id, Condition.ROSACEA, "azelainska kiselina", 15.0, "gel",
+        RoutineSlot.MORNING, RoutineStep.TREATMENT, "2x dnevno", true,
+        "Smanjuje papule i pustule kod rozaceje"));
+    insert(RuleUtils.recommendation(drools.getRule(), $id, Condition.ROSACEA, "azelainska kiselina", 15.0, "gel",
+        RoutineSlot.EVENING, RoutineStep.TREATMENT, "2x dnevno", true,
+        "Smanjuje papule i pustule kod rozaceje"));
+end
+
+rule "Rozaceja PPR umerena: ivermektin i metronidazol"
+    @source("van Zuuren 2019")
+    @opis("Umerena papulopustularna rozaceja: ivermektin 1% uveče i metronidazol 0.75% ujutru")
+    agenda-group "therapy"
+when
+    Diagnosis($id : userId, condition == Condition.ROSACEA, subtype == RosaceaSubtype.PPR, severity == Severity.MODERATE)
+then
+    insert(RuleUtils.recommendation(drools.getRule(), $id, Condition.ROSACEA, "ivermektin", 1.0, "krema",
+        RoutineSlot.EVENING, RoutineStep.TREATMENT, "1x uveče", true,
+        "Deluje na Demodex grinje i upalu kod papulopustularne rozaceje"));
+    insert(RuleUtils.recommendation(drools.getRule(), $id, Condition.ROSACEA, "metronidazol", 0.75, "gel",
+        RoutineSlot.MORNING, RoutineStep.TREATMENT, "1x ujutru", true,
+        "Protivupalno deluje na papule i pustule"));
+end
+
+rule "Perioralni dermatitis: prekid steroida i metronidazol"
+    @source("Wilkin 2002, NRS")
+    @opis("Perioralni dermatitis: prekid topijskog kortikosteroida i metronidazol 0.75% dva puta dnevno")
+    agenda-group "therapy"
+when
+    Diagnosis($id : userId, condition == Condition.PERIORAL_DERMATITIS)
+then
+    insert(new SafetyNote($id,
+        "Prekinuti topijski kortikosteroid na licu. U prvim nedeljama posle prekida stanje može prolazno da se pogorša.",
+        RuleUtils.source(drools.getRule())));
+    insert(RuleUtils.recommendation(drools.getRule(), $id, Condition.PERIORAL_DERMATITIS, "metronidazol", 0.75, "gel",
+        RoutineSlot.MORNING, RoutineStep.TREATMENT, "2x dnevno", true,
+        "Leči perioralni dermatitis posle prekida steroida"));
+    insert(RuleUtils.recommendation(drools.getRule(), $id, Condition.PERIORAL_DERMATITIS, "metronidazol", 0.75, "gel",
+        RoutineSlot.EVENING, RoutineStep.TREATMENT, "2x dnevno", true,
+        "Leči perioralni dermatitis posle prekida steroida"));
 end
