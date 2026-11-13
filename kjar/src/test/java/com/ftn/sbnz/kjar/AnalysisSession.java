@@ -1,5 +1,7 @@
 package com.ftn.sbnz.kjar;
 
+import com.ftn.sbnz.kjar.seed.EvidenceGraph;
+import com.ftn.sbnz.kjar.seed.IngredientGraph;
 import org.kie.api.KieBase;
 import org.kie.api.event.rule.AfterMatchFiredEvent;
 import org.kie.api.event.rule.DefaultAgendaEventListener;
@@ -18,6 +20,9 @@ public class AnalysisSession implements AutoCloseable {
 
     public AnalysisSession() {
         session = ANALYSIS.newKieSession();
+        EvidenceGraph.edges().forEach(session::insert);
+        IngredientGraph.edges().forEach(session::insert);
+        IngredientGraph.groups().forEach(session::insert);
         session.addEventListener(new DefaultAgendaEventListener() {
             @Override
             public void afterMatchFired(AfterMatchFiredEvent event) {

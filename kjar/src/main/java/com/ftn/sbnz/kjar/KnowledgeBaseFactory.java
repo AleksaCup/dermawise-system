@@ -24,6 +24,7 @@ public class KnowledgeBaseFactory {
 
     public static final List<String> BACKWARD_RULES = List.of(
             "rules/backward.drl",
+            "rules/phototype.drl",
             "rules/diagnosis.drl");
 
     public static final List<String> CEP_RULES = List.of(
