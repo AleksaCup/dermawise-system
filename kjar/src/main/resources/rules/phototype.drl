@@ -6,6 +6,7 @@ import com.ftn.sbnz.model.enums.SkinColor;
 import com.ftn.sbnz.model.enums.SunReaction;
 import com.ftn.sbnz.model.enums.TanTendency;
 import com.ftn.sbnz.model.facts.DataReady;
+import com.ftn.sbnz.model.facts.MEDValue;
 import com.ftn.sbnz.model.facts.QuestionnaireSubmitted;
 import com.ftn.sbnz.model.facts.User;
 import com.ftn.sbnz.model.questionnaire.LifestyleAnswers;
@@ -104,4 +105,15 @@ when
     $u : User(id == $id, fototip == 0)
 then
     modify($u) { setFototip(6) }
+end
+
+rule "MED za fototip"
+    @source("Fitzpatrick 1975")
+    @opis("Minimalna eritemska doza (MED) odredjena prema fototipu")
+    agenda-group "phototype"
+when
+    $u : User(fototip > 0, med == 0, $tip : fototip)
+    MEDValue(fototip == $tip, $med : value)
+then
+    modify($u) { setMed($med) }
 end
