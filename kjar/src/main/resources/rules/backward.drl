@@ -3,9 +3,11 @@ package rules;
 import com.ftn.sbnz.kjar.Thresholds;
 import com.ftn.sbnz.model.diary.FlushingSummary;
 import com.ftn.sbnz.model.enums.FlushTrigger;
+import com.ftn.sbnz.model.enums.VezaType;
 import com.ftn.sbnz.model.facts.Dokazuje;
 import com.ftn.sbnz.model.facts.Nalaz;
 import com.ftn.sbnz.model.facts.SeverityScore;
+import com.ftn.sbnz.model.facts.Veza;
 
 query dokazano(String korisnik, String cilj, String preko)
     Nalaz(korisnik, cilj; preko := code)
@@ -38,4 +40,20 @@ query imaPerioralniDermatitis(String korisnik)
     Nalaz(korisnik, "PERIORALNA_DISTRIBUCIJA";)
     not Nalaz(korisnik, "TELANGIEKTAZIJE";)
     Nalaz(korisnik, "SKORASNJI_STEROID"; $znak : code)
+end
+
+query povezan(String x, String y)
+    Veza(x, y;)
+    or
+    ( Veza(x, $z;) and povezan($z, y;) )
+end
+
+query sadrzi(String x, String y)
+    Veza(x, y; type != VezaType.MEMBER_OF)
+    or
+    ( Veza(x, $z; type != VezaType.MEMBER_OF) and sadrzi($z, y;) )
+end
+
+query pripada(String sastojak, String grupa)
+    povezan(sastojak, grupa;)
 end

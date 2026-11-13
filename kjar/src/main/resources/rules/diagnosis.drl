@@ -18,6 +18,8 @@ import com.ftn.sbnz.model.facts.SafetyNote;
 import com.ftn.sbnz.model.facts.SeverityCategory;
 import com.ftn.sbnz.model.facts.SeverityScore;
 import com.ftn.sbnz.model.questionnaire.LifestyleAnswers;
+import com.ftn.sbnz.model.questionnaire.Product;
+import com.ftn.sbnz.model.questionnaire.ProductIngredient;
 import com.ftn.sbnz.model.questionnaire.RegionLesion;
 import com.ftn.sbnz.model.questionnaire.RosaceaAnswers;
 import com.ftn.sbnz.model.questionnaire.ScoradAnswers;
@@ -168,6 +170,22 @@ when
     not Nalaz(userId == $id, code == NalazCode.FLUSHING_UPITNIK)
 then
     insert(new Nalaz($id, NalazCode.FLUSHING_UPITNIK));
+end
+
+rule "Nalaz skorašnji steroid iz proizvoda"
+    @source("Wilkin 2002, NRS")
+    @opis("Proizvod u upotrebi sadrži sastojak iz grupe topijskih kortikosteroida (backward upit pripada)")
+    agenda-group "diagnosis"
+    salience 30
+when
+    DataReady($id : userId)
+    LifestyleAnswers(userId == $id, $proizvodi : currentProducts)
+    $proizvod : Product() from $proizvodi
+    ProductIngredient($sastojak : name) from $proizvod.ingredients
+    pripada($sastojak, "topijski kortikosteroidi";)
+    not Nalaz(userId == $id, code == NalazCode.SKORASNJI_STEROID)
+then
+    insert(new Nalaz($id, NalazCode.SKORASNJI_STEROID));
 end
 
 rule "Nalaz flushing iz dnevnika"
