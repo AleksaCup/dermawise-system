@@ -4,6 +4,7 @@ import com.ftn.sbnz.kjar.RuleUtils;
 import com.ftn.sbnz.model.enums.Condition;
 import com.ftn.sbnz.model.enums.RoutineSlot;
 import com.ftn.sbnz.model.enums.RoutineStep;
+import com.ftn.sbnz.model.enums.Severity;
 import com.ftn.sbnz.model.facts.Diagnosis;
 import com.ftn.sbnz.model.facts.Recommendation;
 import com.ftn.sbnz.model.facts.User;
@@ -104,4 +105,77 @@ then
         RoutineSlot.MORNING, RoutineStep.HYDRATION, "1x ujutru", false, "Osetljiva koža kod rozaceje"));
     insert(RuleUtils.recommendation(drools.getRule(), $id, Condition.ROSACEA, "krema za osetljivu kožu bez mirisa", null, "krema",
         RoutineSlot.EVENING, RoutineStep.HYDRATION, "1x uveče", false, "Osetljiva koža kod rozaceje"));
+end
+
+rule "Akne blage, fototip I-III"
+    @source("Zaenglein 2016, AAD")
+    @opis("Blage akne kod fototipa I-III: topijski retinoid adapalen 0.1% uveče")
+    agenda-group "therapy"
+when
+    Diagnosis($id : userId, condition == Condition.ACNE, severity == Severity.MILD)
+    User(id == $id, fototip >= 1, fototip <= 3)
+then
+    insert(RuleUtils.recommendation(drools.getRule(), $id, Condition.ACNE, "adapalen", 0.1, "gel",
+        RoutineSlot.EVENING, RoutineStep.TREATMENT, "1x uveče", false,
+        "Topijski retinoid je prva linija za blage akne"));
+end
+
+rule "Akne blage, fototip IV-VI"
+    @source("Zaenglein 2016, AAD")
+    @opis("Blage akne kod fototipa IV-VI: azelainska kiselina 15% dva puta dnevno, manji rizik od PIH")
+    agenda-group "therapy"
+when
+    Diagnosis($id : userId, condition == Condition.ACNE, severity == Severity.MILD)
+    User(id == $id, fototip >= 4)
+then
+    insert(RuleUtils.recommendation(drools.getRule(), $id, Condition.ACNE, "azelainska kiselina", 15.0, "gel",
+        RoutineSlot.MORNING, RoutineStep.TREATMENT, "2x dnevno", true,
+        "Manji rizik od post-inflamatorne hiperpigmentacije kod tamnijeg fototipa"));
+    insert(RuleUtils.recommendation(drools.getRule(), $id, Condition.ACNE, "azelainska kiselina", 15.0, "gel",
+        RoutineSlot.EVENING, RoutineStep.TREATMENT, "2x dnevno", true,
+        "Manji rizik od post-inflamatorne hiperpigmentacije kod tamnijeg fototipa"));
+end
+
+rule "Akne umerene, fototip I-III"
+    @source("Zaenglein 2016, AAD, Tabela 4")
+    @opis("Umerene akne kod fototipa I-III: adapalen 0.1% i benzoil peroksid 2.5% (AAD prva linija)")
+    agenda-group "therapy"
+when
+    Diagnosis($id : userId, condition == Condition.ACNE, severity == Severity.MODERATE)
+    User(id == $id, fototip >= 1, fototip <= 3)
+then
+    insert(RuleUtils.recommendation(drools.getRule(), $id, Condition.ACNE, "adapalen", 0.1, "gel",
+        RoutineSlot.EVENING, RoutineStep.TREATMENT, "1x uveče", false,
+        "Kombinacija retinoida i benzoil peroksida je prva linija za umerene akne"));
+    insert(RuleUtils.recommendation(drools.getRule(), $id, Condition.ACNE, "benzoil peroksid", 2.5, "gel",
+        RoutineSlot.EVENING, RoutineStep.TREATMENT, "1x dnevno", false,
+        "Kombinacija retinoida i benzoil peroksida je prva linija za umerene akne"));
+end
+
+rule "Akne umerene, fototip IV-VI"
+    @source("Zaenglein 2016, AAD")
+    @opis("Umerene akne kod fototipa IV-VI: azelainska kiselina 15%, manji rizik od PIH")
+    agenda-group "therapy"
+when
+    Diagnosis($id : userId, condition == Condition.ACNE, severity == Severity.MODERATE)
+    User(id == $id, fototip >= 4)
+then
+    insert(RuleUtils.recommendation(drools.getRule(), $id, Condition.ACNE, "azelainska kiselina", 15.0, "gel",
+        RoutineSlot.MORNING, RoutineStep.TREATMENT, "2x dnevno", true,
+        "Manji rizik od post-inflamatorne hiperpigmentacije kod tamnijeg fototipa"));
+    insert(RuleUtils.recommendation(drools.getRule(), $id, Condition.ACNE, "azelainska kiselina", 15.0, "gel",
+        RoutineSlot.EVENING, RoutineStep.TREATMENT, "2x dnevno", true,
+        "Manji rizik od post-inflamatorne hiperpigmentacije kod tamnijeg fototipa"));
+end
+
+rule "Akne teške: benzoil peroksid za umivanje"
+    @source("Zaenglein 2016, AAD")
+    @opis("Teške akne: do pregleda kod dermatologa benzoil peroksid 2.5% za umivanje")
+    agenda-group "therapy"
+when
+    Diagnosis($id : userId, condition == Condition.ACNE, severity in (Severity.SEVERE, Severity.VERY_SEVERE))
+then
+    insert(RuleUtils.recommendation(drools.getRule(), $id, Condition.ACNE, "benzoil peroksid", 2.5, "gel za umivanje",
+        RoutineSlot.MORNING, RoutineStep.TREATMENT, "1x dnevno, isprati posle 1-2 minuta", false,
+        "Smanjuje bakterije i upalu dok se ne uvede terapija kod dermatologa"));
 end
