@@ -1,11 +1,16 @@
 package rules;
 
+import com.ftn.sbnz.kjar.Thresholds;
 import com.ftn.sbnz.model.enums.Condition;
+import com.ftn.sbnz.model.enums.LesionType;
 import com.ftn.sbnz.model.facts.DataReady;
 import com.ftn.sbnz.model.facts.Diagnosis;
+import com.ftn.sbnz.model.facts.Nalaz;
+import com.ftn.sbnz.model.facts.NalazCode;
 import com.ftn.sbnz.model.facts.SeverityCategory;
 import com.ftn.sbnz.model.facts.SeverityScore;
 import com.ftn.sbnz.model.questionnaire.RegionLesion;
+import com.ftn.sbnz.model.questionnaire.RosaceaAnswers;
 import com.ftn.sbnz.model.questionnaire.ScoradAnswers;
 
 function double scorad(ScoradAnswers s) {
@@ -61,4 +66,148 @@ when
     not Diagnosis(userId == $id, condition == Condition.ATOPIC_DERMATITIS)
 then
     insert(new Diagnosis($id, Condition.ATOPIC_DERMATITIS, $severity, null, $value));
+end
+
+
+rule "Nalaz komedoni"
+    @source("Doshi 1997, GAGS")
+    @opis("Bar jedan region ima komedone")
+    agenda-group "diagnosis"
+    salience 30
+when
+    DataReady($id : userId)
+    exists RegionLesion(userId == $id, lesion == LesionType.COMEDONES)
+    not Nalaz(userId == $id, code == NalazCode.KOMEDONI)
+then
+    insert(new Nalaz($id, NalazCode.KOMEDONI));
+end
+
+rule "Nalaz perzistentni eritem"
+    @source("Wilkin 2002, NRS")
+    @opis("Prijavljen perzistentni eritem")
+    agenda-group "diagnosis"
+    salience 30
+when
+    DataReady($id : userId)
+    RosaceaAnswers(userId == $id, persistentErythema)
+    not Nalaz(userId == $id, code == NalazCode.PERZISTENTNI_ERITEM)
+then
+    insert(new Nalaz($id, NalazCode.PERZISTENTNI_ERITEM));
+end
+
+rule "Nalaz centrofacijalna distribucija"
+    @source("Wilkin 2002, NRS")
+    @opis("Promene su na centralnom delu lica")
+    agenda-group "diagnosis"
+    salience 30
+when
+    DataReady($id : userId)
+    RosaceaAnswers(userId == $id, centrofacialDistribution)
+    not Nalaz(userId == $id, code == NalazCode.CENTROFACIJALNA_DISTRIBUCIJA)
+then
+    insert(new Nalaz($id, NalazCode.CENTROFACIJALNA_DISTRIBUCIJA));
+end
+
+rule "Nalaz telangiektazije"
+    @source("Wilkin 2002, NRS")
+    @opis("Prijavljene telangiektazije (vidljivi kapilari)")
+    agenda-group "diagnosis"
+    salience 30
+when
+    DataReady($id : userId)
+    RosaceaAnswers(userId == $id, telangiectasia)
+    not Nalaz(userId == $id, code == NalazCode.TELANGIEKTAZIJE)
+then
+    insert(new Nalaz($id, NalazCode.TELANGIEKTAZIJE));
+end
+
+rule "Nalaz papule i pustule bez komedona"
+    @source("Wilkin 2002, NRS")
+    @opis("Prijavljene papule i pustule bez komedona")
+    agenda-group "diagnosis"
+    salience 30
+when
+    DataReady($id : userId)
+    RosaceaAnswers(userId == $id, papulesPustulesWithoutComedones)
+    not Nalaz(userId == $id, code == NalazCode.PAPULE_PUSTULE_BEZ_KOMEDONA)
+then
+    insert(new Nalaz($id, NalazCode.PAPULE_PUSTULE_BEZ_KOMEDONA));
+end
+
+rule "Nalaz flushing iz upitnika"
+    @source("Wilkin 2002, NRS")
+    @opis("Flushing bar dva puta nedeljno prema upitniku")
+    agenda-group "diagnosis"
+    salience 30
+when
+    DataReady($id : userId)
+    RosaceaAnswers(userId == $id, flushingPerWeek >= Thresholds.FLUSHING_PER_WEEK)
+    not Nalaz(userId == $id, code == NalazCode.FLUSHING_UPITNIK)
+then
+    insert(new Nalaz($id, NalazCode.FLUSHING_UPITNIK));
+end
+
+rule "Nalaz okularni simptomi"
+    @source("Wilkin 2002, NRS")
+    @opis("Prijavljeni simptomi oka (peckanje, crvenilo, suvoća)")
+    agenda-group "diagnosis"
+    salience 30
+when
+    DataReady($id : userId)
+    RosaceaAnswers(userId == $id, ocularSymptoms)
+    not Nalaz(userId == $id, code == NalazCode.OKULARNI_SIMPTOMI)
+then
+    insert(new Nalaz($id, NalazCode.OKULARNI_SIMPTOMI));
+end
+
+rule "Nalaz fimatozne promene"
+    @source("Wilkin 2002, NRS")
+    @opis("Prijavljeno zadebljanje kože (fima)")
+    agenda-group "diagnosis"
+    salience 30
+when
+    DataReady($id : userId)
+    RosaceaAnswers(userId == $id, phymatousChanges)
+    not Nalaz(userId == $id, code == NalazCode.FIMATOZNE_PROMENE)
+then
+    insert(new Nalaz($id, NalazCode.FIMATOZNE_PROMENE));
+end
+
+rule "Nalaz perioralna distribucija"
+    @source("Wilkin 2002, NRS")
+    @opis("Promene su oko usta")
+    agenda-group "diagnosis"
+    salience 30
+when
+    DataReady($id : userId)
+    RosaceaAnswers(userId == $id, perioralDistribution)
+    not Nalaz(userId == $id, code == NalazCode.PERIORALNA_DISTRIBUCIJA)
+then
+    insert(new Nalaz($id, NalazCode.PERIORALNA_DISTRIBUCIJA));
+end
+
+rule "Nalaz perioralne papule"
+    @source("Wilkin 2002, NRS")
+    @opis("Papule oko usta")
+    agenda-group "diagnosis"
+    salience 30
+when
+    DataReady($id : userId)
+    RosaceaAnswers(userId == $id, perioralDistribution, papuleCount > 0)
+    not Nalaz(userId == $id, code == NalazCode.PERIORALNE_PAPULE)
+then
+    insert(new Nalaz($id, NalazCode.PERIORALNE_PAPULE));
+end
+
+rule "Nalaz skorašnji steroid"
+    @source("Wilkin 2002, NRS")
+    @opis("Skorašnja upotreba topijskog kortikosteroida")
+    agenda-group "diagnosis"
+    salience 30
+when
+    DataReady($id : userId)
+    RosaceaAnswers(userId == $id, recentTopicalSteroid)
+    not Nalaz(userId == $id, code == NalazCode.SKORASNJI_STEROID)
+then
+    insert(new Nalaz($id, NalazCode.SKORASNJI_STEROID));
 end
