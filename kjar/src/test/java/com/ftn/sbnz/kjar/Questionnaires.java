@@ -121,6 +121,12 @@ public class Questionnaires {
     public List<Object> facts() {
         List<Object> facts = new ArrayList<>(MedValues.all());
         facts.add(user);
+        facts.addAll(answers());
+        return facts;
+    }
+
+    public List<Object> answers() {
+        List<Object> facts = new ArrayList<>();
         facts.add(phototype);
         lesions.forEach((region, lesion) -> facts.add(new RegionLesion(USER_ID, region, lesion)));
         facts.add(rosacea);
