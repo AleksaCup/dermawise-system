@@ -3,15 +3,31 @@ package rules;
 import com.ftn.sbnz.kjar.Thresholds;
 import com.ftn.sbnz.model.enums.Condition;
 import com.ftn.sbnz.model.enums.LesionType;
+import com.ftn.sbnz.model.enums.RosaceaSubtype;
+import com.ftn.sbnz.model.enums.Severity;
 import com.ftn.sbnz.model.facts.DataReady;
 import com.ftn.sbnz.model.facts.Diagnosis;
 import com.ftn.sbnz.model.facts.Nalaz;
 import com.ftn.sbnz.model.facts.NalazCode;
+import com.ftn.sbnz.model.facts.RosaceaPrimaryCriterion;
 import com.ftn.sbnz.model.facts.SeverityCategory;
 import com.ftn.sbnz.model.facts.SeverityScore;
 import com.ftn.sbnz.model.questionnaire.RegionLesion;
 import com.ftn.sbnz.model.questionnaire.RosaceaAnswers;
 import com.ftn.sbnz.model.questionnaire.ScoradAnswers;
+
+function Severity rosaceaSeverity(RosaceaAnswers a) {
+    int highest = Math.max(
+            Math.max(a.getFlushingGrade(), a.getPersistentErythemaGrade()),
+            Math.max(a.getTelangiectasiaGrade(), a.getPapulesPustulesGrade()));
+    if (highest >= 3) {
+        return Severity.SEVERE;
+    }
+    if (highest == 2) {
+        return Severity.MODERATE;
+    }
+    return Severity.MILD;
+}
 
 function double scorad(ScoradAnswers s) {
     double value = s.getAffectedAreaPercent() / 5 + 7.0 * s.getIntensitySum() / 2 + s.getSubjectiveSum();
@@ -210,4 +226,87 @@ when
     not Nalaz(userId == $id, code == NalazCode.SKORASNJI_STEROID)
 then
     insert(new Nalaz($id, NalazCode.SKORASNJI_STEROID));
+end
+
+rule "Primarni kriterijum rozaceje"
+    @source("Wilkin 2002, NRS")
+    @opis("Perzistentni eritem sa centrofacijalnom distribucijom uz telangiektazije ili čest flushing")
+    agenda-group "diagnosis"
+    salience 20
+when
+    DataReady($id : userId)
+    Nalaz(userId == $id, code == NalazCode.PERZISTENTNI_ERITEM)
+    Nalaz(userId == $id, code == NalazCode.CENTROFACIJALNA_DISTRIBUCIJA)
+    exists Nalaz(userId == $id, code in (NalazCode.TELANGIEKTAZIJE, NalazCode.FLUSHING_UPITNIK))
+    not RosaceaPrimaryCriterion(userId == $id)
+then
+    insert(new RosaceaPrimaryCriterion($id));
+end
+
+rule "Rozaceja PPR"
+    @source("Wilkin 2002, NRS")
+    @opis("Kriterijum rozaceje, bez komedona, sa bar 5 papula ili 3 pustule: papulopustularni podtip")
+    agenda-group "diagnosis"
+when
+    RosaceaPrimaryCriterion($id : userId)
+    not Nalaz(userId == $id, code == NalazCode.KOMEDONI)
+    $answers : RosaceaAnswers(userId == $id,
+                              papuleCount >= Thresholds.PPR_MIN_PAPULES || pustuleCount >= Thresholds.PPR_MIN_PUSTULES)
+    not Diagnosis(userId == $id, condition == Condition.ROSACEA, subtype == RosaceaSubtype.PPR)
+then
+    insert(new Diagnosis($id, Condition.ROSACEA, rosaceaSeverity($answers), RosaceaSubtype.PPR, null));
+end
+
+rule "Rozaceja ETR"
+    @source("Wilkin 2002, NRS")
+    @opis("Kriterijum rozaceje, perzistentni eritem i telangiektazije, manje od 5 papula: eritematoteleangiektatični podtip")
+    agenda-group "diagnosis"
+when
+    RosaceaPrimaryCriterion($id : userId)
+    Nalaz(userId == $id, code == NalazCode.PERZISTENTNI_ERITEM)
+    Nalaz(userId == $id, code == NalazCode.TELANGIEKTAZIJE)
+    $answers : RosaceaAnswers(userId == $id, papuleCount < Thresholds.PPR_MIN_PAPULES)
+    not Diagnosis(userId == $id, condition == Condition.ROSACEA, subtype == RosaceaSubtype.ETR)
+then
+    insert(new Diagnosis($id, Condition.ROSACEA, rosaceaSeverity($answers), RosaceaSubtype.ETR, null));
+end
+
+rule "Rozaceja ETR uz flushing"
+    @source("Wilkin 2002, NRS")
+    @opis("Perzistentni eritem, flushing bar dva puta nedeljno i bez komedona: eritematoteleangiektatični podtip")
+    agenda-group "diagnosis"
+when
+    RosaceaPrimaryCriterion($id : userId)
+    Nalaz(userId == $id, code == NalazCode.FLUSHING_UPITNIK)
+    not Nalaz(userId == $id, code == NalazCode.KOMEDONI)
+    $answers : RosaceaAnswers(userId == $id, papuleCount < Thresholds.PPR_MIN_PAPULES)
+    not Diagnosis(userId == $id, condition == Condition.ROSACEA, subtype == RosaceaSubtype.ETR)
+then
+    insert(new Diagnosis($id, Condition.ROSACEA, rosaceaSeverity($answers), RosaceaSubtype.ETR, null));
+end
+
+rule "Rozaceja fimatozna"
+    @source("Wilkin 2002, NRS")
+    @opis("Kriterijum rozaceje uz zadebljanje kože: fimatozni podtip")
+    agenda-group "diagnosis"
+when
+    RosaceaPrimaryCriterion($id : userId)
+    Nalaz(userId == $id, code == NalazCode.FIMATOZNE_PROMENE)
+    $answers : RosaceaAnswers(userId == $id)
+    not Diagnosis(userId == $id, condition == Condition.ROSACEA, subtype == RosaceaSubtype.PHYMATOUS)
+then
+    insert(new Diagnosis($id, Condition.ROSACEA, rosaceaSeverity($answers), RosaceaSubtype.PHYMATOUS, null));
+end
+
+rule "Rozaceja okularna"
+    @source("Wilkin 2002, NRS")
+    @opis("Kriterijum rozaceje uz simptome oka: okularni podtip")
+    agenda-group "diagnosis"
+when
+    RosaceaPrimaryCriterion($id : userId)
+    Nalaz(userId == $id, code == NalazCode.OKULARNI_SIMPTOMI)
+    $answers : RosaceaAnswers(userId == $id)
+    not Diagnosis(userId == $id, condition == Condition.ROSACEA, subtype == RosaceaSubtype.OCULAR)
+then
+    insert(new Diagnosis($id, Condition.ROSACEA, rosaceaSeverity($answers), RosaceaSubtype.OCULAR, null));
 end
