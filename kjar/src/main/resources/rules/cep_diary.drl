@@ -5,6 +5,7 @@ import java.time.ZoneId;
 import java.util.Date;
 import java.util.Set;
 
+import com.ftn.sbnz.kjar.RuleUtils;
 import com.ftn.sbnz.kjar.Thresholds;
 import com.ftn.sbnz.model.cep.CepAlert;
 import com.ftn.sbnz.model.cep.DominantTrigger;
@@ -17,8 +18,11 @@ import com.ftn.sbnz.model.diary.SkinSymptom;
 import com.ftn.sbnz.model.diary.UVDanEvent;
 import com.ftn.sbnz.model.enums.CepAlertType;
 import com.ftn.sbnz.model.enums.FlushTrigger;
+import com.ftn.sbnz.model.enums.RoutineSlot;
+import com.ftn.sbnz.model.enums.RoutineStep;
 import com.ftn.sbnz.model.facts.MEDValue;
 import com.ftn.sbnz.model.facts.User;
+import org.kie.api.definition.rule.Rule;
 import org.kie.api.runtime.rule.RuleContext;
 
 declare FlushingEpizoda
@@ -68,6 +72,17 @@ end
 function void informUser(RuleContext kcontext, String userId, CepAlertType type, String message) {
     long now = kcontext.getKieRuntime().getSessionClock().getCurrentTime();
     kcontext.getKieRuntime().insert(new CepAlert(userId, type, message, new Date(now)));
+}
+
+function void preporuciTretman(RuleContext kcontext, String userId) {
+    Rule rule = kcontext.getRule();
+    kcontext.getKieRuntime().insert(RuleUtils.recommendation(rule, userId, null, "vitamin c", 15.0, "serum",
+        RoutineSlot.MORNING, RoutineStep.TREATMENT, "1x ujutru", false,
+        "Antioksidans koji smanjuje oštećenje kože od UV zračenja"));
+    kcontext.getKieRuntime().insert(RuleUtils.recommendation(rule, userId, null, "tretinoin", 0.025, "krema",
+        RoutineSlot.EVENING, RoutineStep.TREATMENT, "1x uveče", true,
+        "Retinoid sa dokazanim dejstvom na fotostarenje"));
+    kcontext.getKieRuntime().getAgenda().getAgendaGroup("safety").setFocus();
 }
 
 function double eritemskaDoza(double uvIndex, int minuti, int spf) {
@@ -140,4 +155,21 @@ when
 then
     informUser(kcontext, $id, CepAlertType.VERY_HIGH_UV,
         "UV indeks " + $uv + " je vrlo visok, a krema za sunčanje nije korišćena. Sledeći put SPF 30 ili viši i hlad od 11 do 16 h.");
+end
+
+rule "Pojacan rizik fotostarenja"
+    @source("Glogau 1996")
+    @opis("Najmanje 5 dana sa prekoračenjem MED u 30 dana povećava rizik prelaska u višu Glogau kategoriju")
+when
+    User($id : id)
+    not GlogauProgressionRisk(userId == $id)
+    Number($broj : intValue >= Thresholds.CEP_UV_WARNINGS_IN_30_DAYS) from accumulate(
+        $w : HighUVExposureWarning(userId == $id) over window:time(30d),
+        count($w))
+then
+    insert(new GlogauProgressionRisk($id, "II_to_III"));
+    preporuciTretman(kcontext, $id);
+    informUser(kcontext, $id, CepAlertType.PHOTOAGING_RISK,
+        "MED je prekoračen " + $broj + " dana u poslednjih 30 dana - povećan rizik od fotostarenja. "
+            + "Preporučeni su vitamin C 15% ujutru i tretinoin 0.025% uveče, uz obavezan SPF.");
 end
