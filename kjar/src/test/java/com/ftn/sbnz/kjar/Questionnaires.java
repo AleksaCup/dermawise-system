@@ -1,5 +1,7 @@
 package com.ftn.sbnz.kjar;
 
+import com.ftn.sbnz.model.diary.SkinSymptom;
+import com.ftn.sbnz.model.enums.BodyArea;
 import com.ftn.sbnz.model.enums.EthnicOrigin;
 import com.ftn.sbnz.model.enums.EyeColor;
 import com.ftn.sbnz.model.enums.FaceRegion;
@@ -7,6 +9,7 @@ import com.ftn.sbnz.model.enums.HairColor;
 import com.ftn.sbnz.model.enums.LesionType;
 import com.ftn.sbnz.model.enums.SkinColor;
 import com.ftn.sbnz.model.enums.SunReaction;
+import com.ftn.sbnz.model.enums.SymptomType;
 import com.ftn.sbnz.model.enums.TanTendency;
 import com.ftn.sbnz.model.facts.QuestionnaireSubmitted;
 import com.ftn.sbnz.model.facts.User;
@@ -18,6 +21,7 @@ import com.ftn.sbnz.model.questionnaire.ScoradAnswers;
 import com.ftn.sbnz.kjar.seed.MedValues;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
@@ -33,6 +37,7 @@ public class Questionnaires {
     private RosaceaAnswers rosacea = new RosaceaAnswers();
     private ScoradAnswers scorad = new ScoradAnswers();
     private LifestyleAnswers lifestyle = new LifestyleAnswers();
+    private final List<Object> extraFacts = new ArrayList<>();
 
     public Questionnaires() {
         for (FaceRegion region : FaceRegion.values()) {
@@ -75,6 +80,11 @@ public class Questionnaires {
         return this;
     }
 
+    public Questionnaires symptom(SymptomType type, BodyArea location) {
+        extraFacts.add(new SkinSymptom(USER_ID, new Date(), type, location));
+        return this;
+    }
+
     public PhototypeAnswers phototype() {
         return phototype;
     }
@@ -105,6 +115,7 @@ public class Questionnaires {
             facts.add(scorad);
         }
         facts.add(lifestyle);
+        facts.addAll(extraFacts);
         facts.add(new QuestionnaireSubmitted(USER_ID));
         return facts;
     }
