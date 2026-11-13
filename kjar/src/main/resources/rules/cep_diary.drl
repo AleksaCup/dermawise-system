@@ -1,5 +1,10 @@
 package rules;
 
+import java.util.Date;
+import java.util.Set;
+
+import com.ftn.sbnz.kjar.Thresholds;
+import com.ftn.sbnz.model.cep.CepAlert;
 import com.ftn.sbnz.model.cep.DominantTrigger;
 import com.ftn.sbnz.model.cep.GlogauProgressionRisk;
 import com.ftn.sbnz.model.cep.HighUVExposureWarning;
@@ -8,6 +13,10 @@ import com.ftn.sbnz.model.diary.FlushingEpizoda;
 import com.ftn.sbnz.model.diary.NoviProizvod;
 import com.ftn.sbnz.model.diary.SkinSymptom;
 import com.ftn.sbnz.model.diary.UVDanEvent;
+import com.ftn.sbnz.model.enums.CepAlertType;
+import com.ftn.sbnz.model.enums.FlushTrigger;
+import com.ftn.sbnz.model.facts.User;
+import org.kie.api.runtime.rule.RuleContext;
 
 declare FlushingEpizoda
     @role(event)
@@ -51,4 +60,44 @@ end
 declare GlogauProgressionRisk
     @role(event)
     @expires(30d)
+end
+
+function void informUser(RuleContext kcontext, String userId, CepAlertType type, String message) {
+    long now = kcontext.getKieRuntime().getSessionClock().getCurrentTime();
+    kcontext.getKieRuntime().insert(new CepAlert(userId, type, message, new Date(now)));
+}
+
+rule "Sumnja na ETR rozaceju"
+    @source("Wilkin 2002, NRS")
+    @opis("Najmanje 4 flushing epizode u poslednjih 7 dana: sumnja na ETR rozaceju")
+when
+    User($id : id)
+    not RosaceaSuspicion(userId == $id)
+    Number($broj : intValue >= Thresholds.CEP_FLUSHING_IN_7_DAYS) from accumulate(
+        $e : FlushingEpizoda(userId == $id) over window:time(7d),
+        count($e))
+then
+    insert(new RosaceaSuspicion($id, "ETR", "high"));
+    informUser(kcontext, $id, CepAlertType.ROSACEA_SUSPICION,
+        "Detektovano " + $broj + " epizoda flushing-a u poslednjih 7 dana - sumnja na ETR rozaceju, "
+            + "preporučuje se konsultacija dermatologa");
+end
+
+rule "Identifikacija dominantnog okidaca"
+    @source("Wilkin 2002, NRS")
+    @opis("Isti okidač u najmanje 3 flushing epizode za 30 dana je dominantni okidač")
+when
+    User($id : id)
+    $okidaci : Set() from accumulate(
+        FlushingEpizoda(userId == $id, trigger != null, $t : trigger) over window:time(30d),
+        collectSet($t))
+    $okidac : FlushTrigger() from $okidaci
+    not DominantTrigger(userId == $id, trigger == $okidac)
+    Number($broj : intValue >= Thresholds.CEP_DOMINANT_TRIGGER_IN_30_DAYS) from accumulate(
+        $e : FlushingEpizoda(userId == $id, trigger == $okidac) over window:time(30d),
+        count($e))
+then
+    insert(new DominantTrigger($id, $okidac));
+    informUser(kcontext, $id, CepAlertType.DOMINANT_TRIGGER,
+        "Identifikovan okidač: " + $okidac.name().toLowerCase() + " (" + $broj + " epizoda u poslednjih 30 dana)");
 end
