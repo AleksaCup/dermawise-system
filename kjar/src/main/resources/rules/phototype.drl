@@ -2,8 +2,12 @@ package rules;
 
 import java.util.Set;
 
+import com.ftn.sbnz.model.enums.SkinColor;
+import com.ftn.sbnz.model.enums.SunReaction;
+import com.ftn.sbnz.model.enums.TanTendency;
 import com.ftn.sbnz.model.facts.DataReady;
 import com.ftn.sbnz.model.facts.QuestionnaireSubmitted;
+import com.ftn.sbnz.model.facts.User;
 import com.ftn.sbnz.model.questionnaire.LifestyleAnswers;
 import com.ftn.sbnz.model.questionnaire.PhototypeAnswers;
 import com.ftn.sbnz.model.questionnaire.RegionLesion;
@@ -26,4 +30,78 @@ when
         collectSet($region))
 then
     insert(new DataReady($id));
+end
+
+rule "Fototip I"
+    @source("Fitzpatrick 1975")
+    @opis("Uvek opekotine i nikad preplanulost: fototip I")
+    agenda-group "phototype"
+when
+    DataReady($id : userId)
+    PhototypeAnswers(userId == $id, sunReaction == SunReaction.ALWAYS_BURNS, tanTendency == TanTendency.NEVER)
+    $u : User(id == $id, fototip == 0)
+then
+    modify($u) { setFototip(1) }
+end
+
+rule "Fototip II"
+    @source("Fitzpatrick 1975")
+    @opis("Uvek opekotine uz slabu preplanulost: fototip II")
+    agenda-group "phototype"
+when
+    DataReady($id : userId)
+    PhototypeAnswers(userId == $id, sunReaction == SunReaction.ALWAYS_BURNS, tanTendency != TanTendency.NEVER)
+    $u : User(id == $id, fototip == 0)
+then
+    modify($u) { setFototip(2) }
+end
+
+rule "Fototip III"
+    @source("Fitzpatrick 1975")
+    @opis("Povremene opekotine pa postepena preplanulost: fototip III")
+    agenda-group "phototype"
+when
+    DataReady($id : userId)
+    PhototypeAnswers(userId == $id, sunReaction == SunReaction.BURNS_THEN_TANS)
+    $u : User(id == $id, fototip == 0)
+then
+    modify($u) { setFototip(3) }
+end
+
+rule "Fototip IV"
+    @source("Fitzpatrick 1975")
+    @opis("Retke opekotine i brza preplanulost: fototip IV")
+    agenda-group "phototype"
+when
+    DataReady($id : userId)
+    PhototypeAnswers(userId == $id, sunReaction == SunReaction.RARELY_BURNS)
+    $u : User(id == $id, fototip == 0)
+then
+    modify($u) { setFototip(4) }
+end
+
+rule "Fototip V"
+    @source("Fitzpatrick 1975")
+    @opis("Bez opekotina, koza nije tamno smedja ni crna: fototip V")
+    agenda-group "phototype"
+when
+    DataReady($id : userId)
+    PhototypeAnswers(userId == $id, sunReaction == SunReaction.NEVER_BURNS,
+                     skinColor not in (SkinColor.DARK_BROWN, SkinColor.BLACK))
+    $u : User(id == $id, fototip == 0)
+then
+    modify($u) { setFototip(5) }
+end
+
+rule "Fototip VI"
+    @source("Fitzpatrick 1975")
+    @opis("Bez opekotina, tamno smedja ili crna koza: fototip VI")
+    agenda-group "phototype"
+when
+    DataReady($id : userId)
+    PhototypeAnswers(userId == $id, sunReaction == SunReaction.NEVER_BURNS,
+                     skinColor in (SkinColor.DARK_BROWN, SkinColor.BLACK))
+    $u : User(id == $id, fototip == 0)
+then
+    modify($u) { setFototip(6) }
 end
