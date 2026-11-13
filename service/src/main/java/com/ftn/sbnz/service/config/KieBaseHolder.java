@@ -2,12 +2,15 @@ package com.ftn.sbnz.service.config;
 
 import com.ftn.sbnz.kjar.KnowledgeBaseFactory;
 import com.ftn.sbnz.kjar.KnowledgeBases;
+import com.ftn.sbnz.model.template.MaxConcentrationByPhototype;
 import org.kie.api.KieBase;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
+import java.time.Instant;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 
 @Component
@@ -17,15 +20,21 @@ public class KieBaseHolder {
 
     private final KnowledgeBaseFactory factory = new KnowledgeBaseFactory();
     private final AtomicReference<KnowledgeBases> current = new AtomicReference<>();
+    private final AtomicLong version = new AtomicLong();
+    private volatile Instant rebuiltAt;
+    private volatile int templateRows;
 
     public KieBaseHolder() {
         rebuild(List.of());
     }
 
-    public synchronized void rebuild(List<String> generatedDrl) {
-        KnowledgeBases rebuilt = factory.buildAll(generatedDrl);
+    public synchronized void rebuild(List<MaxConcentrationByPhototype> rows) {
+        KnowledgeBases rebuilt = factory.buildWithMaxConcentration(rows);
         current.set(rebuilt);
-        log.info("Knowledge bases rebuilt with {} generated rule files", generatedDrl.size());
+        templateRows = rows.size();
+        rebuiltAt = Instant.now();
+        long newVersion = version.incrementAndGet();
+        log.info("Knowledge bases rebuilt, version {}, {} MaxConcentrationByPhototype rows", newVersion, rows.size());
     }
 
     public KieBase getAnalysisKieBase() {
@@ -38,5 +47,17 @@ public class KieBaseHolder {
 
     public KieBase getCepKieBase() {
         return current.get().cep();
+    }
+
+    public long getVersion() {
+        return version.get();
+    }
+
+    public Instant getRebuiltAt() {
+        return rebuiltAt;
+    }
+
+    public int getTemplateRows() {
+        return templateRows;
     }
 }
