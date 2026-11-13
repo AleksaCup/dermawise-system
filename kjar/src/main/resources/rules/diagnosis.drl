@@ -1,1 +1,64 @@
 package rules;
+
+import com.ftn.sbnz.model.enums.Condition;
+import com.ftn.sbnz.model.facts.DataReady;
+import com.ftn.sbnz.model.facts.Diagnosis;
+import com.ftn.sbnz.model.facts.SeverityCategory;
+import com.ftn.sbnz.model.facts.SeverityScore;
+import com.ftn.sbnz.model.questionnaire.RegionLesion;
+import com.ftn.sbnz.model.questionnaire.ScoradAnswers;
+
+function double scorad(ScoradAnswers s) {
+    double value = s.getAffectedAreaPercent() / 5 + 7.0 * s.getIntensitySum() / 2 + s.getSubjectiveSum();
+    return Math.round(value * 10) / 10.0;
+}
+
+rule "GAGS skor"
+    @source("Doshi 1997, GAGS")
+    @opis("GAGS skor je zbir težine regiona puta ocene najteže lezije u regionu")
+    agenda-group "diagnosis"
+when
+    DataReady($id : userId)
+    not SeverityScore(userId == $id, scale == "GAGS")
+    Number($gags : intValue) from accumulate(
+        RegionLesion(userId == $id, $region : region, $lesion : lesion),
+        sum($region.getWeight() * $lesion.getGrade()))
+then
+    insert(new SeverityScore($id, "GAGS", $gags));
+end
+
+rule "Akne prema GAGS kategoriji"
+    @source("Doshi 1997, GAGS")
+    @opis("Dijagnoza akni sa težinom iz GAGS kategorije")
+    agenda-group "diagnosis"
+when
+    SeverityCategory($id : userId, scale == "GAGS", $severity : severity)
+    SeverityScore(userId == $id, scale == "GAGS", $gags : value)
+    not Diagnosis(userId == $id, condition == Condition.ACNE)
+then
+    insert(new Diagnosis($id, Condition.ACNE, $severity, null, $gags));
+end
+
+rule "SCORAD skor"
+    @source("ETFAD 1993, SCORAD")
+    @opis("SCORAD = A/5 + 7B/2 + C (površina, intenzitet znakova, subjektivni simptomi)")
+    agenda-group "diagnosis"
+when
+    DataReady($id : userId)
+    $answers : ScoradAnswers(userId == $id)
+    not SeverityScore(userId == $id, scale == "SCORAD")
+then
+    insert(new SeverityScore($id, "SCORAD", scorad($answers)));
+end
+
+rule "Atopijski dermatitis prema SCORAD kategoriji"
+    @source("ETFAD 1993, SCORAD")
+    @opis("Dijagnoza atopijskog dermatitisa sa težinom iz SCORAD kategorije")
+    agenda-group "diagnosis"
+when
+    SeverityCategory($id : userId, scale == "SCORAD", $severity : severity)
+    SeverityScore(userId == $id, scale == "SCORAD", $value : value)
+    not Diagnosis(userId == $id, condition == Condition.ATOPIC_DERMATITIS)
+then
+    insert(new Diagnosis($id, Condition.ATOPIC_DERMATITIS, $severity, null, $value));
+end

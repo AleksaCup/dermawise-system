@@ -1,0 +1,27 @@
+template header
+scale
+min
+max
+severity
+source
+
+package rules;
+
+import com.ftn.sbnz.model.enums.Severity;
+import com.ftn.sbnz.model.facts.SeverityCategory;
+import com.ftn.sbnz.model.facts.SeverityScore;
+
+template "SeverityCategory"
+
+rule "Kategorija @{scale} @{severity} @{row.rowNumber}"
+    @source("@{source}")
+    @opis("@{scale} skor od @{min} do @{max}: @{severity}")
+    agenda-group "diagnosis"
+when
+    SeverityScore($id : userId, scale == "@{scale}", value >= @{min}, value <= @{max})
+    not SeverityCategory(userId == $id, scale == "@{scale}")
+then
+    insert(new SeverityCategory($id, "@{scale}", Severity.@{severity}));
+end
+
+end template
