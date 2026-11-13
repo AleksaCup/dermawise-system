@@ -25,6 +25,7 @@ public class ProfileService {
 
     private final SkinProfileRepository profiles;
     private final FactAssembler assembler;
+    private final CepSessionManager cepSessionManager;
 
     @Transactional
     public ProfileResponse saveQuestionnaire(AppUser user, QuestionnaireRequest request) {
@@ -44,7 +45,9 @@ public class ProfileService {
         profile.setPregnant(normalized.lifestyle().pregnant());
         profile.setBreastfeeding(normalized.lifestyle().breastfeeding());
         profile.setUpdatedAt(Instant.now());
-        return toResponse(profiles.save(profile));
+        SkinProfile saved = profiles.save(profile);
+        cepSessionManager.invalidate(user.getId());
+        return toResponse(saved);
     }
 
     @Transactional(readOnly = true)

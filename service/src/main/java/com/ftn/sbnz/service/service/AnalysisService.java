@@ -46,6 +46,7 @@ public class AnalysisService {
     private final AnalysisResultRepository analyses;
     private final RecommendationRepository recommendations;
     private final ObjectMapper objectMapper;
+    private final CepSessionManager cepSessionManager;
     private final AnalysisRunner runner = new AnalysisRunner();
 
     @Transactional
@@ -59,6 +60,7 @@ public class AnalysisService {
         profile.setFototip(result.getFototip());
         profile.setMed(result.getMed());
         profiles.save(profile);
+        cepSessionManager.invalidate(user.getId());
 
         AnalysisResultEntity entity = new AnalysisResultEntity();
         entity.setUser(user);
