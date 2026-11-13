@@ -1,6 +1,7 @@
 package com.ftn.sbnz.kjar;
 
 import com.ftn.sbnz.kjar.template.SeverityCategoryRows;
+import com.ftn.sbnz.model.template.MaxConcentrationByPhototype;
 import org.kie.api.KieBase;
 import org.kie.api.builder.Message;
 import org.kie.api.builder.Results;
@@ -33,11 +34,20 @@ public class KnowledgeBaseFactory {
             "rules/backward.drl");
 
     public static final String SEVERITY_TEMPLATE = "templates/SeverityCategory.drt";
+    public static final String MAX_CONCENTRATION_TEMPLATE = "templates/MaxConcentrationByPhototype.drt";
 
+    private final TemplateCompiler templateCompiler = new TemplateCompiler();
     private final String severityCategoryDrl;
 
     public KnowledgeBaseFactory() {
-        severityCategoryDrl = new TemplateCompiler().compile(SEVERITY_TEMPLATE, SeverityCategoryRows.load());
+        severityCategoryDrl = templateCompiler.compile(SEVERITY_TEMPLATE, SeverityCategoryRows.load());
+    }
+
+    public KnowledgeBases buildWithMaxConcentration(List<MaxConcentrationByPhototype> rows) {
+        if (rows.isEmpty()) {
+            return buildAll(List.of());
+        }
+        return buildAll(List.of(templateCompiler.compile(MAX_CONCENTRATION_TEMPLATE, rows)));
     }
 
     public KnowledgeBases buildAll(List<String> generatedDrl) {

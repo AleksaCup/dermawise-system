@@ -1,1 +1,175 @@
 package rules;
+
+import com.ftn.sbnz.kjar.RuleUtils;
+import com.ftn.sbnz.model.enums.RecommendationStatus;
+import com.ftn.sbnz.model.enums.RoutineSlot;
+import com.ftn.sbnz.model.enums.RoutineStep;
+import com.ftn.sbnz.model.facts.Recommendation;
+import com.ftn.sbnz.model.facts.SafetyNote;
+import com.ftn.sbnz.model.facts.User;
+import com.ftn.sbnz.model.questionnaire.LifestyleAnswers;
+import com.ftn.sbnz.model.questionnaire.Product;
+
+function String razlog(User u) {
+    return u.isPregnant() ? "prijavljena trudnoća" : "prijavljeno dojenje";
+}
+
+function String velikoSlovo(String s) {
+    return Character.toUpperCase(s.charAt(0)) + s.substring(1);
+}
+
+rule "Trudnoća iz upitnika"
+    @source("DermaWise upitnik")
+    @opis("Trudnoća iz upitnika se beleži kod korisnika pre bezbednosnih provera")
+    agenda-group "safety"
+    salience 100
+when
+    LifestyleAnswers($id : userId, pregnant)
+    $u : User(id == $id, pregnant == false)
+then
+    modify($u) { setPregnant(true) }
+end
+
+rule "Dojenje iz upitnika"
+    @source("DermaWise upitnik")
+    @opis("Dojenje iz upitnika se beleži kod korisnika pre bezbednosnih provera")
+    agenda-group "safety"
+    salience 100
+when
+    LifestyleAnswers($id : userId, breastfeeding)
+    $u : User(id == $id, breastfeeding == false)
+then
+    modify($u) { setBreastfeeding(true) }
+end
+
+rule "Trudnoća: povlačenje retinoida"
+    @source("FDA: retinoidi se ne preporučuju u trudnoći i dojenju")
+    @opis("U trudnoći i dojenju retinoid se povlači iz rutine")
+    agenda-group "safety"
+    salience 20
+when
+    $u : User($id : id, pregnant || breastfeeding)
+    $r : Recommendation(userId == $id, status not in (RecommendationStatus.WITHDRAWN, RecommendationStatus.REJECTED),
+                        $sastojak : sastojak)
+    pripada($sastojak, "retinoidi";)
+then
+    modify($r) {
+        setStatus(RecommendationStatus.WITHDRAWN),
+        addWarning("Povučeno: " + razlog($u))
+    }
+    insert(new SafetyNote($id,
+        velikoSlovo($sastojak) + " povučen - " + razlog($u) + ", zamenjen azelainskom kiselinom 15%",
+        RuleUtils.source(drools.getRule())));
+end
+
+rule "Zamena za povučen retinoid"
+    @source("Zaenglein 2016, AAD")
+    @opis("Umesto povučenog retinoida azelainska kiselina 15%, bezbedna u trudnoći i dojenju")
+    agenda-group "safety"
+    salience 15
+when
+    $u : User($id : id, pregnant || breastfeeding)
+    Recommendation(userId == $id, status == RecommendationStatus.WITHDRAWN, $sastojak : sastojak,
+                   $slot : slot, $condition : forCondition)
+    pripada($sastojak, "retinoidi";)
+    not Recommendation(userId == $id, sastojak == "azelainska kiselina", slot == $slot,
+                       status not in (RecommendationStatus.WITHDRAWN, RecommendationStatus.REJECTED))
+then
+    insert(RuleUtils.recommendation(drools.getRule(), $id, $condition, "azelainska kiselina", 15.0, "gel",
+        $slot, RoutineStep.TREATMENT, "1x dnevno", true,
+        "Zamena za " + $sastojak + ": " + razlog($u)));
+end
+
+rule "Trudnoća: povlačenje tetraciklina"
+    @source("FDA: tetraciklini se ne preporučuju u trudnoći i dojenju")
+    @opis("U trudnoći i dojenju tetraciklin se povlači, potrebna je konsultacija sa dermatologom")
+    agenda-group "safety"
+    salience 20
+when
+    $u : User($id : id, pregnant || breastfeeding)
+    $r : Recommendation(userId == $id, status not in (RecommendationStatus.WITHDRAWN, RecommendationStatus.REJECTED),
+                        $sastojak : sastojak)
+    pripada($sastojak, "tetraciklini";)
+then
+    modify($r) {
+        setStatus(RecommendationStatus.WITHDRAWN),
+        addWarning("Povučeno: " + razlog($u))
+    }
+    insert(new SafetyNote($id,
+        velikoSlovo($sastojak) + " povučen - " + razlog($u) + ", potrebna je konsultacija sa dermatologom",
+        RuleUtils.source(drools.getRule())));
+end
+
+rule "Benzoil peroksid i retinoid u istoj rutini"
+    @source("Pravila kompatibilnosti aktivnih sastojaka")
+    @opis("Benzoil peroksid i retinoid u istom terminu se razdvajaju: benzoil peroksid ujutru, retinoid uveče")
+    agenda-group "safety"
+    salience 10
+when
+    $bp : Recommendation($id : userId, sastojak == "benzoil peroksid", $slot : slot,
+                         status not in (RecommendationStatus.WITHDRAWN, RecommendationStatus.REJECTED))
+    $retinoid : Recommendation(userId == $id, this != $bp, slot == $slot, $sastojak : sastojak,
+                               status not in (RecommendationStatus.WITHDRAWN, RecommendationStatus.REJECTED))
+    pripada($sastojak, "retinoidi";)
+then
+    modify($bp) {
+        setSlot(RoutineSlot.MORNING),
+        addWarning("Premešteno u jutarnju rutinu, odvojeno od retinoida")
+    }
+    modify($retinoid) { setSlot(RoutineSlot.EVENING) }
+    insert(new SafetyNote($id,
+        "Benzoil peroksid i " + $sastojak + " razdvojeni: benzoil peroksid ujutru, " + $sastojak
+            + " uveče, jer benzoil peroksid razgrađuje retinoide",
+        RuleUtils.source(drools.getRule())));
+end
+
+rule "Retinoid i zaštita od sunca"
+    @source("Zaenglein 2016, AAD")
+    @opis("Uz retinoid u rutini koža je osetljivija na sunce, SPF je obavezan")
+    agenda-group "safety"
+when
+    Recommendation($id : userId, $sastojak : sastojak,
+                   status not in (RecommendationStatus.WITHDRAWN, RecommendationStatus.REJECTED))
+    pripada($sastojak, "retinoidi";)
+    not SafetyNote(userId == $id, text == "Retinoidi stanjuju rožnati sloj i povećavaju osetljivost na sunce, SPF je obavezan svako jutro.")
+then
+    insert(new SafetyNote($id,
+        "Retinoidi stanjuju rožnati sloj i povećavaju osetljivost na sunce, SPF je obavezan svako jutro.",
+        RuleUtils.source(drools.getRule())));
+end
+
+rule "Alergija na preporučeni sastojak"
+    @source("Poznate alergije i unakrsne reaktivnosti korisnika")
+    @opis("Preporučeni sastojak je poznat alergen korisnika (backward upit PoznatAlergen) i povlači se")
+    agenda-group "safety"
+    salience 20
+when
+    $r : Recommendation($id : userId, $sastojak : sastojak,
+                        status not in (RecommendationStatus.WITHDRAWN, RecommendationStatus.REJECTED))
+    PoznatAlergen($id, $sastojak;)
+then
+    modify($r) {
+        setStatus(RecommendationStatus.WITHDRAWN),
+        addWarning("Povučeno: poznata alergija ili unakrsna reaktivnost")
+    }
+    insert(new SafetyNote($id,
+        velikoSlovo($sastojak) + " povučen - poznata alergija ili unakrsna reaktivnost",
+        RuleUtils.source(drools.getRule())));
+end
+
+rule "Proizvod u upotrebi sadrži poznat alergen"
+    @source("Poznate alergije i unakrsne reaktivnosti korisnika")
+    @opis("Proizvod koji korisnik koristi sadrži poznat alergen, direktno ili kroz graf sastojaka")
+    agenda-group "safety"
+when
+    LifestyleAnswers($id : userId, $proizvodi : currentProducts)
+    $proizvod : Product($ime : name) from $proizvodi
+    ProizvodSadrzi($proizvod, $sastojak;)
+    PoznatAlergen($id, $sastojak;)
+    not SafetyNote(userId == $id,
+                   text == ("Proizvod " + $ime + " sadrži " + $sastojak + ", na koji ste alergični. Prestanite da ga koristite."))
+then
+    insert(new SafetyNote($id,
+        "Proizvod " + $ime + " sadrži " + $sastojak + ", na koji ste alergični. Prestanite da ga koristite.",
+        RuleUtils.source(drools.getRule())));
+end

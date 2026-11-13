@@ -2,6 +2,7 @@ package com.ftn.sbnz.kjar;
 
 import com.ftn.sbnz.kjar.seed.EvidenceGraph;
 import com.ftn.sbnz.kjar.seed.IngredientGraph;
+import com.ftn.sbnz.kjar.template.MaxConcentrationRows;
 import org.kie.api.KieBase;
 import org.kie.api.event.rule.AfterMatchFiredEvent;
 import org.kie.api.event.rule.DefaultAgendaEventListener;
@@ -13,13 +14,18 @@ import java.util.List;
 
 public class AnalysisSession implements AutoCloseable {
 
-    private static final KieBase ANALYSIS = new KnowledgeBaseFactory().buildAll(List.of()).analysis();
+    private static final KieBase ANALYSIS =
+            new KnowledgeBaseFactory().buildWithMaxConcentration(MaxConcentrationRows.load()).analysis();
 
     private final KieSession session;
     private final List<String> firedRules = new ArrayList<>();
 
     public AnalysisSession() {
-        session = ANALYSIS.newKieSession();
+        this(ANALYSIS);
+    }
+
+    public AnalysisSession(KieBase kieBase) {
+        session = kieBase.newKieSession();
         EvidenceGraph.edges().forEach(session::insert);
         IngredientGraph.edges().forEach(session::insert);
         IngredientGraph.groups().forEach(session::insert);

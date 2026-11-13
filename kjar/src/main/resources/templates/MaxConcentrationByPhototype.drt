@@ -1,0 +1,63 @@
+template header
+sastojak
+minFototip
+maxFototip
+maxKoncentracija
+napomena
+
+package rules;
+
+import com.ftn.sbnz.kjar.RuleUtils;
+import com.ftn.sbnz.model.enums.RecommendationStatus;
+import com.ftn.sbnz.model.facts.Recommendation;
+import com.ftn.sbnz.model.facts.SafetyNote;
+import com.ftn.sbnz.model.facts.User;
+import com.ftn.sbnz.model.questionnaire.LifestyleAnswers;
+import com.ftn.sbnz.model.questionnaire.Product;
+import com.ftn.sbnz.model.questionnaire.ProductIngredient;
+
+template "MaxConcentrationByPhototype"
+
+rule "Provera bezbedne koncentracije @{row.rowNumber}"
+    @source("Template MaxConcentrationByPhototype")
+    @opis("@{sastojak} za fototip @{minFototip}-@{maxFototip}: najviše @{maxKoncentracija}%")
+    agenda-group "safety"
+when
+    User($id : id, $tip : fototip, fototip >= @{minFototip}, fototip <= @{maxFototip})
+    $r : Recommendation(userId == $id, $staro : koncentracija, sastojak == "@{sastojak}", koncentracija != null,
+                        koncentracija > @{maxKoncentracija},
+                        status not in (RecommendationStatus.WITHDRAWN, RecommendationStatus.REJECTED))
+then
+    String sastojak = "@{sastojak}";
+    String napomena = "@{napomena}";
+    double max = @{maxKoncentracija};
+    modify($r) {
+        setKoncentracija(max),
+        addWarning(napomena)
+    }
+    insert(new SafetyNote($id,
+        sastojak + ": koncentracija smanjena sa " + $staro + "% na " + max + "% za fototip " + $tip + " (" + napomena + ")",
+        RuleUtils.source(drools.getRule())));
+end
+
+rule "Upozorenje za proizvod u upotrebi @{row.rowNumber}"
+    @source("Template MaxConcentrationByPhototype")
+    @opis("Proizvod u upotrebi ima @{sastojak} iznad @{maxKoncentracija}% za fototip @{minFototip}-@{maxFototip}")
+    agenda-group "safety"
+when
+    User($id : id, $tip : fototip, fototip >= @{minFototip}, fototip <= @{maxFototip})
+    LifestyleAnswers(userId == $id, $proizvodi : currentProducts)
+    $proizvod : Product($ime : name) from $proizvodi
+    ProductIngredient($koncentracija : concentration, name == "@{sastojak}", concentration != null,
+                      concentration > @{maxKoncentracija}) from $proizvod.ingredients
+then
+    String sastojak = "@{sastojak}";
+    String napomena = "@{napomena}";
+    double max = @{maxKoncentracija};
+    insert(new SafetyNote($id,
+        "Proizvod " + $ime + " sadrži " + sastojak + " " + $koncentracija + "%, a za fototip " + $tip
+            + " preporučeno je najviše " + max + "% (" + napomena + ")",
+        RuleUtils.source(drools.getRule())));
+end
+
+end template
