@@ -1,0 +1,69 @@
+@host = http://localhost:8080
+
+### Prijava korisnice Ana (fototip II, MED 30, posle analize iz 02-fc1-acne.http)
+# @name ana
+POST {{host}}/api/auth/login
+Content-Type: application/json
+
+{"email": "ana@dermawise.rs", "password": "user123"}
+
+### Sunce pre 5 dana: UV 7, 60 min, bez SPF daje 63 mJ/cm2, više od pola MED, upozorenje
+POST {{host}}/api/diary/sun
+Authorization: Bearer {{ana.response.body.token}}
+Content-Type: application/json
+
+{"occurredAt": "{{$datetime iso8601 -5 d}}", "uvIndex": 7, "minutesInSun": 60, "sunscreenSpf": 0}
+
+### Sunce pre 4 dana sa SPF 50: doza 1.3 mJ/cm2, nema upozorenja
+POST {{host}}/api/diary/sun
+Authorization: Bearer {{ana.response.body.token}}
+Content-Type: application/json
+
+{"occurredAt": "{{$datetime iso8601 -4 d}}", "uvIndex": 7, "minutesInSun": 60, "sunscreenSpf": 50}
+
+### Sunce pre 4 dana, popodne bez SPF: drugo upozorenje
+POST {{host}}/api/diary/sun
+Authorization: Bearer {{ana.response.body.token}}
+Content-Type: application/json
+
+{"occurredAt": "{{$datetime iso8601 -4 d}}", "uvIndex": 6, "minutesInSun": 70, "sunscreenSpf": 0}
+
+### Sunce pre 3 dana: treće upozorenje
+POST {{host}}/api/diary/sun
+Authorization: Bearer {{ana.response.body.token}}
+Content-Type: application/json
+
+{"occurredAt": "{{$datetime iso8601 -3 d}}", "uvIndex": 8, "minutesInSun": 45, "sunscreenSpf": 0}
+
+### Sunce pre 2 dana: četvrto upozorenje, a UV 9 bez kreme daje i upozorenje za vrlo visok UV
+POST {{host}}/api/diary/sun
+Authorization: Bearer {{ana.response.body.token}}
+Content-Type: application/json
+
+{"occurredAt": "{{$datetime iso8601 -2 d}}", "uvIndex": 9, "minutesInSun": 40, "sunscreenSpf": 0}
+
+### CEP primer 2: peto upozorenje u 30 dana daje rizik fotostarenja i preporuku vitamin C 15% + tretinoin 0.025%
+POST {{host}}/api/diary/sun
+Authorization: Bearer {{ana.response.body.token}}
+Content-Type: application/json
+
+{"occurredAt": "{{$datetime iso8601 -1 d}}", "uvIndex": 7, "minutesInSun": 50, "sunscreenSpf": 0}
+
+### CEP preporuke: tretinoin čeka dermatologa
+GET {{host}}/api/cep/recommendations
+Authorization: Bearer {{ana.response.body.token}}
+
+### Prijava korisnice Milica (trudna)
+# @name milica
+POST {{host}}/api/auth/login
+Content-Type: application/json
+
+{"email": "milica@dermawise.rs", "password": "user123"}
+
+### Brže punjenje dnevnika (samo dev profil): nedelja flushinga i sunca, tretinoin odmah povučen kroz safety.drl zbog trudnoće
+POST {{host}}/api/demo/cep-week
+Authorization: Bearer {{milica.response.body.token}}
+
+### CEP preporuke za trudnicu: tretinoin WITHDRAWN, azelainska kiselina umesto njega
+GET {{host}}/api/cep/recommendations
+Authorization: Bearer {{milica.response.body.token}}

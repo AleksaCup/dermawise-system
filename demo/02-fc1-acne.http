@@ -1,0 +1,31 @@
+@host = http://localhost:8080
+
+### Prijava korisnice Ana
+# @name ana
+POST {{host}}/api/auth/login
+Content-Type: application/json
+
+{"email": "ana@dermawise.rs", "password": "user123"}
+
+### Upitnik koji je seeder sačuvao: uvek opekotine i slaba preplanulost, papule na čelu, obrazima, bradi i grudima
+GET {{host}}/api/profile
+Authorization: Bearer {{ana.response.body.token}}
+
+### FC primer 1: fototip II i MED 30, GAGS 23 i MODERATE, adapalen + BP, pa BP ujutru i adapalen uveče (vidi explanation)
+POST {{host}}/api/analysis
+Authorization: Bearer {{ana.response.body.token}}
+
+### Prijava korisnice Milica (trudna)
+# @name milica
+POST {{host}}/api/auth/login
+Content-Type: application/json
+
+{"email": "milica@dermawise.rs", "password": "user123"}
+
+### Isti lanac uz trudnoću: adapalen povučen (notInRoutine), azelainska kiselina 15% čeka dermatologa, napomena u safetyNotes
+POST {{host}}/api/analysis
+Authorization: Bearer {{milica.response.body.token}}
+
+### Poslednja analiza se čita iz baze sa trenutnim statusima preporuka
+GET {{host}}/api/analysis/latest
+Authorization: Bearer {{milica.response.body.token}}

@@ -1,0 +1,47 @@
+@host = http://localhost:8080
+
+### Prijava demo korisnika
+# @name demo
+POST {{host}}/api/auth/login
+Content-Type: application/json
+
+{"email": "demo@dermawise.rs", "password": "demo123"}
+
+### Flushing pre 5 dana, okidač alkohol
+POST {{host}}/api/diary/flushing
+Authorization: Bearer {{demo.response.body.token}}
+Content-Type: application/json
+
+{"occurredAt": "{{$datetime iso8601 -5 d}}", "durationMinutes": 20, "trigger": "ALKOHOL"}
+
+### Flushing pre 4 dana, okidač toplota
+POST {{host}}/api/diary/flushing
+Authorization: Bearer {{demo.response.body.token}}
+Content-Type: application/json
+
+{"occurredAt": "{{$datetime iso8601 -4 d}}", "durationMinutes": 15, "trigger": "TOPLOTA"}
+
+### Flushing pre 2 dana, okidač alkohol
+POST {{host}}/api/diary/flushing
+Authorization: Bearer {{demo.response.body.token}}
+Content-Type: application/json
+
+{"occurredAt": "{{$datetime iso8601 -2 d}}", "durationMinutes": 25, "trigger": "ALKOHOL"}
+
+### CEP primer 1: četvrta epizoda u 7 dana daje sumnju na ETR rozaceju, treći alkohol u 30 dana je dominantni okidač
+POST {{host}}/api/diary/flushing
+Authorization: Bearer {{demo.response.body.token}}
+Content-Type: application/json
+
+{"occurredAt": "{{$datetime iso8601 -1 d}}", "durationMinutes": 30, "trigger": "ALKOHOL"}
+
+### Peta epizoda iste nedelje ne pravi novu sumnju (guard RosaceaSuspicion ističe tek za 7 dana)
+POST {{host}}/api/diary/flushing
+Authorization: Bearer {{demo.response.body.token}}
+Content-Type: application/json
+
+{"occurredAt": "{{$datetime iso8601 -2 h}}", "durationMinutes": 10, "trigger": "HRANA"}
+
+### Sva CEP upozorenja korisnika
+GET {{host}}/api/cep/alerts
+Authorization: Bearer {{demo.response.body.token}}
