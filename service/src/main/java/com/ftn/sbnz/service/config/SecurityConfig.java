@@ -29,7 +29,8 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**", "/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**")
                         .permitAll()
-                        .requestMatchers("/api/profile/**", "/api/analysis/**", "/api/diary/**", "/api/cep/**")
+                        .requestMatchers("/api/profile/**", "/api/analysis/**", "/api/diary/**", "/api/cep/**",
+                                "/api/demo/**")
                         .hasRole("USER")
                         .requestMatchers("/api/backward/**").hasAnyRole("USER", "DERMATOLOGIST")
                         .requestMatchers("/api/dermatologist/**", "/api/templates/**").hasRole("DERMATOLOGIST")
