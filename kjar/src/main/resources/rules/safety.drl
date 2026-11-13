@@ -121,3 +121,18 @@ then
             + " uveče, jer benzoil peroksid razgrađuje retinoide",
         RuleUtils.source(drools.getRule())));
 end
+
+rule "Retinoid i zaštita od sunca"
+    @source("Zaenglein 2016, AAD")
+    @opis("Uz retinoid u rutini koža je osetljivija na sunce, SPF je obavezan")
+    agenda-group "safety"
+when
+    Recommendation($id : userId, $sastojak : sastojak,
+                   status not in (RecommendationStatus.WITHDRAWN, RecommendationStatus.REJECTED))
+    pripada($sastojak, "retinoidi";)
+    not SafetyNote(userId == $id, text == "Retinoidi stanjuju rožnati sloj i povećavaju osetljivost na sunce, SPF je obavezan svako jutro.")
+then
+    insert(new SafetyNote($id,
+        "Retinoidi stanjuju rožnati sloj i povećavaju osetljivost na sunce, SPF je obavezan svako jutro.",
+        RuleUtils.source(drools.getRule())));
+end
