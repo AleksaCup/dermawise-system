@@ -1,1 +1,54 @@
 package rules;
+
+import com.ftn.sbnz.model.cep.DominantTrigger;
+import com.ftn.sbnz.model.cep.GlogauProgressionRisk;
+import com.ftn.sbnz.model.cep.HighUVExposureWarning;
+import com.ftn.sbnz.model.cep.RosaceaSuspicion;
+import com.ftn.sbnz.model.diary.FlushingEpizoda;
+import com.ftn.sbnz.model.diary.NoviProizvod;
+import com.ftn.sbnz.model.diary.SkinSymptom;
+import com.ftn.sbnz.model.diary.UVDanEvent;
+
+declare FlushingEpizoda
+    @role(event)
+    @timestamp(timestamp)
+    @expires(31d)
+end
+
+declare UVDanEvent
+    @role(event)
+    @timestamp(date)
+    @expires(2d)
+end
+
+declare NoviProizvod
+    @role(event)
+    @timestamp(timestamp)
+    @expires(31d)
+end
+
+declare SkinSymptom
+    @role(event)
+    @timestamp(timestamp)
+    @expires(31d)
+end
+
+declare RosaceaSuspicion
+    @role(event)
+    @expires(7d)
+end
+
+declare DominantTrigger
+    @role(event)
+    @expires(30d)
+end
+
+declare HighUVExposureWarning
+    @role(event)
+    @expires(31d)
+end
+
+declare GlogauProgressionRisk
+    @role(event)
+    @expires(30d)
+end
