@@ -8,6 +8,7 @@ import com.ftn.sbnz.model.enums.RoutineStep;
 import com.ftn.sbnz.model.enums.Severity;
 import com.ftn.sbnz.model.facts.Diagnosis;
 import com.ftn.sbnz.model.facts.Recommendation;
+import com.ftn.sbnz.model.facts.Referral;
 import com.ftn.sbnz.model.facts.SafetyNote;
 import com.ftn.sbnz.model.facts.User;
 import com.ftn.sbnz.model.questionnaire.LifestyleAnswers;
@@ -299,4 +300,76 @@ then
     insert(RuleUtils.recommendation(drools.getRule(), $id, Condition.CONTACT_DERMATITIS, "hidrokortizon", 1.0, "krema",
         RoutineSlot.EVENING, RoutineStep.TREATMENT, "1x dnevno, najviše 7 dana", false,
         "Kratko smiruje reakciju na koži. Ako posle 7 dana nema poboljšanja, javiti se dermatologu."));
+end
+
+rule "Uput: teške akne"
+    @source("Zaenglein 2016, AAD")
+    @opis("Teške i vrlo teške akne leči dermatolog oralnom terapijom")
+    agenda-group "therapy"
+when
+    Diagnosis($id : userId, condition == Condition.ACNE, severity in (Severity.SEVERE, Severity.VERY_SEVERE))
+    not Referral(userId == $id, forCondition == Condition.ACNE, specialist == "dermatolog")
+then
+    insert(RuleUtils.referral(drools.getRule(), $id, Condition.ACNE, "dermatolog",
+        "Teške akne zahtevaju oralnu terapiju (oralni antibiotik ili izotretinoin) koju propisuje dermatolog."));
+end
+
+rule "Uput: teška papulopustularna rozaceja"
+    @source("van Zuuren 2019")
+    @opis("Teška PPR rozaceja zahteva oralnu terapiju kod dermatologa")
+    agenda-group "therapy"
+when
+    Diagnosis($id : userId, condition == Condition.ROSACEA, subtype == RosaceaSubtype.PPR, severity == Severity.SEVERE)
+    not Referral(userId == $id, forCondition == Condition.ROSACEA, specialist == "dermatolog")
+then
+    insert(RuleUtils.referral(drools.getRule(), $id, Condition.ROSACEA, "dermatolog",
+        "Teška papulopustularna rozaceja zahteva oralnu terapiju (npr. doksiciklin) koju propisuje dermatolog."));
+end
+
+rule "Uput: fimatozna rozaceja"
+    @source("van Zuuren 2019")
+    @opis("Fimatozne promene se leče laserom ili hirurški")
+    agenda-group "therapy"
+when
+    Diagnosis($id : userId, condition == Condition.ROSACEA, subtype == RosaceaSubtype.PHYMATOUS)
+    not Referral(userId == $id, forCondition == Condition.ROSACEA, specialist == "dermatolog")
+then
+    insert(RuleUtils.referral(drools.getRule(), $id, Condition.ROSACEA, "dermatolog",
+        "Zadebljanje kože kod rozaceje ne prolazi topijskom terapijom, leči se laserom ili hirurški."));
+end
+
+rule "Uput: okularna rozaceja, dermatolog"
+    @source("van Zuuren 2019")
+    @opis("Okularna rozaceja zahteva lečenje kod dermatologa")
+    agenda-group "therapy"
+when
+    Diagnosis($id : userId, condition == Condition.ROSACEA, subtype == RosaceaSubtype.OCULAR)
+    not Referral(userId == $id, forCondition == Condition.ROSACEA, specialist == "dermatolog")
+then
+    insert(RuleUtils.referral(drools.getRule(), $id, Condition.ROSACEA, "dermatolog",
+        "Rozaceja sa simptomima oka zahteva lečenje kod dermatologa."));
+end
+
+rule "Uput: okularna rozaceja, oftalmolog"
+    @source("van Zuuren 2019")
+    @opis("Simptomi oka kod rozaceje zahtevaju pregled oftalmologa")
+    agenda-group "therapy"
+when
+    Diagnosis($id : userId, condition == Condition.ROSACEA, subtype == RosaceaSubtype.OCULAR)
+    not Referral(userId == $id, forCondition == Condition.ROSACEA, specialist == "oftalmolog")
+then
+    insert(RuleUtils.referral(drools.getRule(), $id, Condition.ROSACEA, "oftalmolog",
+        "Simptomi oka kod rozaceje mogu da oštete rožnjaču, potreban je pregled oftalmologa."));
+end
+
+rule "Uput: težak atopijski dermatitis"
+    @source("Sidbury 2014, AAD")
+    @opis("Težak atopijski dermatitis leči dermatolog sistemskom terapijom ili fototerapijom")
+    agenda-group "therapy"
+when
+    Diagnosis($id : userId, condition == Condition.ATOPIC_DERMATITIS, severity == Severity.SEVERE)
+    not Referral(userId == $id, forCondition == Condition.ATOPIC_DERMATITIS, specialist == "dermatolog")
+then
+    insert(RuleUtils.referral(drools.getRule(), $id, Condition.ATOPIC_DERMATITIS, "dermatolog",
+        "SCORAD iznad 50 zahteva sistemsku terapiju ili fototerapiju koju vodi dermatolog."));
 end
