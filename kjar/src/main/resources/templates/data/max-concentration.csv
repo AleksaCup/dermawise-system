@@ -1,0 +1,6 @@
+sastojak,minFototip,maxFototip,maxKoncentracija,napomena
+hidrohinon,1,3,4,standardna doza
+hidrohinon,4,6,2,smanjena zbog rizika ohronoze
+retinol,1,6,1,"uvodi se postupno: 2× nedeljno, 3× nedeljno, pa svako veče"
+salicilna kiselina,1,6,2,bezbedno za sve fototipove
+vitamin c,1,6,20,pH < 3.5 za penetraciju
