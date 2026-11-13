@@ -1,0 +1,19 @@
+template header
+scale
+limit
+
+package rules;
+
+import com.ftn.sbnz.model.facts.SeverityScore;
+import com.ftn.sbnz.model.facts.SafetyNote;
+
+template "TestThreshold"
+
+rule "Test prag @{row.rowNumber}"
+when
+    $s : SeverityScore(scale == "@{scale}", value >= @{limit})
+then
+    insert(new SafetyNote($s.getUserId(), "Prag @{limit} za @{scale}", "test"));
+end
+
+end template
