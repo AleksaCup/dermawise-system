@@ -1,1 +1,22 @@
 package rules;
+
+import com.ftn.sbnz.kjar.Thresholds;
+import com.ftn.sbnz.model.diary.FlushingSummary;
+import com.ftn.sbnz.model.enums.FlushTrigger;
+import com.ftn.sbnz.model.facts.Dokazuje;
+import com.ftn.sbnz.model.facts.Nalaz;
+
+query dokazano(String korisnik, String cilj, String preko)
+    Nalaz(korisnik, cilj; preko := code)
+    or
+    ( Dokazuje($dete, cilj;) and dokazano(korisnik, $dete, preko;) )
+end
+
+query PrimarniZnakRosaceje(String korisnik, String znak)
+    dokazano(korisnik, "PRIMARNI_ZNAK", znak;)
+end
+
+query TranzijentniEritem(String korisnik)
+    $summary : FlushingSummary(korisnik; last7Days >= Thresholds.FLUSHING_PER_WEEK)
+    exists FlushTrigger(this in (FlushTrigger.HRANA, FlushTrigger.ALKOHOL, FlushTrigger.TOPLOTA)) from $summary.triggers
+end
