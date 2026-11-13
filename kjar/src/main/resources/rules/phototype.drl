@@ -1,1 +1,29 @@
 package rules;
+
+import java.util.Set;
+
+import com.ftn.sbnz.model.facts.DataReady;
+import com.ftn.sbnz.model.facts.QuestionnaireSubmitted;
+import com.ftn.sbnz.model.questionnaire.LifestyleAnswers;
+import com.ftn.sbnz.model.questionnaire.PhototypeAnswers;
+import com.ftn.sbnz.model.questionnaire.RegionLesion;
+import com.ftn.sbnz.model.questionnaire.RosaceaAnswers;
+import com.ftn.sbnz.model.questionnaire.ScoradAnswers;
+
+rule "Upitnik spreman"
+    @source("DermaWise upitnik")
+    @opis("Svi delovi upitnika su popunjeni, analiza moze da pocne")
+    agenda-group "phototype"
+when
+    QuestionnaireSubmitted($id : userId)
+    not DataReady(userId == $id)
+    PhototypeAnswers(userId == $id)
+    RosaceaAnswers(userId == $id)
+    ScoradAnswers(userId == $id)
+    LifestyleAnswers(userId == $id)
+    Set(size == 6) from accumulate(
+        RegionLesion(userId == $id, $region : region),
+        collectSet($region))
+then
+    insert(new DataReady($id));
+end
