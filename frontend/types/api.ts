@@ -5,3 +5,13 @@ export interface ApiErrorBody {
   message: string
   fieldErrors: Record<string, string>
 }
+
+export type Role = 'USER' | 'DERMATOLOGIST' | 'ADMIN'
+
+export interface AuthResponse {
+  token: string
+  userId: number
+  email: string
+  fullName: string
+  role: Role
+}

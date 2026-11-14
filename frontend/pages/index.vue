@@ -6,6 +6,16 @@
       prati priznate dermatološke skale i smernice, uz obrazloženje i izvor.
     </p>
 
+    <div class="d-flex ga-2 mb-8">
+      <template v-if="auth.isLoggedIn">
+        <p class="muted">Prijavljeni ste kao {{ auth.user?.fullName }}.</p>
+      </template>
+      <template v-else>
+        <v-btn to="/login" color="primary">Prijava</v-btn>
+        <v-btn to="/register" variant="outlined">Registracija</v-btn>
+      </template>
+    </div>
+
     <v-row>
       <v-col v-for="item in items" :key="item.title" cols="12" md="4">
         <v-card class="h-100">
@@ -18,6 +28,11 @@
 </template>
 
 <script setup lang="ts">
+import { useAuthStore } from '~/stores/auth'
+
+definePageMeta({ public: true })
+
+const auth = useAuthStore()
 const items = [
   {
     title: 'Upitnik',

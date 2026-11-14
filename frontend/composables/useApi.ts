@@ -30,6 +30,10 @@ export function useApi() {
       if (!err.status) {
         throw new ApiError(0, 'Server nije dostupan. Proverite da li je backend pokrenut.')
       }
+      if (err.status === 401 && token && !path.startsWith('/api/auth')) {
+        localStorage.removeItem(TOKEN_KEY)
+        await navigateTo('/login')
+      }
       throw new ApiError(err.status, err.data?.message ?? 'Došlo je do greške', err.data?.fieldErrors ?? {})
     }
   }
