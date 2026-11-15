@@ -61,6 +61,9 @@ export const useAuthStore = defineStore('auth', {
       localStorage.setItem(USER_KEY, JSON.stringify(this.user))
     },
     homePath(): string {
+      if (this.role === 'USER') {
+        return '/questionnaire'
+      }
       return '/'
     },
   },
