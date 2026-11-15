@@ -33,12 +33,11 @@
           <li v-for="(message, field) in serverErrors" :key="field">{{ field }}: {{ message }}</li>
         </ul>
       </v-alert>
-      <v-alert v-if="saved" type="success" class="mt-4" role="status">Upitnik je sačuvan.</v-alert>
 
       <div class="d-flex justify-space-between mt-6">
         <v-btn variant="outlined" :disabled="step === 0" @click="step--">Nazad</v-btn>
         <v-btn v-if="step < steps.length - 1" color="primary" @click="next">Dalje</v-btn>
-        <v-btn v-else color="primary" :loading="saving" @click="save">Sačuvaj upitnik</v-btn>
+        <v-btn v-else color="primary" :loading="saving" @click="save">Sačuvaj i pokreni analizu</v-btn>
       </div>
     </template>
   </section>
@@ -51,6 +50,7 @@ import type { IngredientDto, ProductDto, Questionnaire } from '~/types/api'
 definePageMeta({ roles: ['USER'] })
 
 const profileApi = useProfileApi()
+const analysisApi = useAnalysisApi()
 
 const steps = [
   { title: 'Fototip' },
@@ -63,7 +63,6 @@ const steps = [
 const step = ref(0)
 const loading = ref(true)
 const saving = ref(false)
-const saved = ref(false)
 const error = ref('')
 const serverErrors = ref<Record<string, string>>({})
 const phototypeErrors = ref<Record<string, string>>({})
@@ -105,7 +104,6 @@ function next() {
   if (step.value === 0 && !validatePhototype()) {
     return
   }
-  saved.value = false
   step.value++
 }
 
@@ -123,12 +121,11 @@ async function save() {
   saving.value = true
   error.value = ''
   serverErrors.value = {}
-  saved.value = false
   try {
     const payload = { ...form.value, lifestyle: { ...form.value.lifestyle, currentProducts: cleanedProducts() } }
-    const profile = await profileApi.saveQuestionnaire(payload)
-    form.value = profile.questionnaire
-    saved.value = true
+    await profileApi.saveQuestionnaire(payload)
+    await analysisApi.run()
+    await navigateTo('/results')
   } catch (e) {
     if (e instanceof ApiError) {
       error.value = e.message

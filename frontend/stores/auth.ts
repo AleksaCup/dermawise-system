@@ -62,7 +62,7 @@ export const useAuthStore = defineStore('auth', {
     },
     homePath(): string {
       if (this.role === 'USER') {
-        return '/questionnaire'
+        return '/results'
       }
       return '/'
     },

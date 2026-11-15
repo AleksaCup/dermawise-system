@@ -98,3 +98,70 @@ export const GRADE_LABELS = ['Nema', 'Blago', 'Umereno', 'Izraženo']
 export function label<T extends string>(list: Option<T>[], value: T | null | undefined): string {
   return list.find((o) => o.value === value)?.title ?? (value ?? '')
 }
+
+export const CONDITION_LABELS: Record<string, string> = {
+  ACNE: 'Akne',
+  ROSACEA: 'Rozaceja',
+  PERIORAL_DERMATITIS: 'Perioralni dermatitis',
+  ATOPIC_DERMATITIS: 'Atopijski dermatitis',
+  SEBORRHEIC_DERMATITIS: 'Seboroični dermatitis',
+  CONTACT_DERMATITIS: 'Kontaktni dermatitis',
+}
+
+export const SEVERITY_LABELS: Record<string, string> = {
+  MILD: 'blag oblik',
+  MODERATE: 'umeren oblik',
+  SEVERE: 'težak oblik',
+  VERY_SEVERE: 'vrlo težak oblik',
+}
+
+export const SUBTYPE_LABELS: Record<string, string> = {
+  ETR: 'eritematoteleangiektatična (ETR)',
+  PPR: 'papulopustularna (PPR)',
+  PHYMATOUS: 'fimatozna',
+  OCULAR: 'okularna',
+}
+
+export const STEP_LABELS: Record<string, string> = {
+  CLEANSING: 'Čišćenje',
+  TREATMENT: 'Tretman',
+  HYDRATION: 'Hidratacija',
+  SPF: 'Zaštita od sunca',
+}
+
+export const PHASE_LABELS: Record<string, string> = {
+  phototype: 'Fototip',
+  diagnosis: 'Dijagnostika',
+  therapy: 'Terapija',
+  safety: 'Bezbednost',
+  MAIN: 'Dnevnik',
+}
+
+export const STATUS_INFO: Record<string, { label: string; color: string }> = {
+  ACTIVE: { label: 'U rutini', color: 'success' },
+  PENDING_REVIEW: { label: 'Čeka potvrdu dermatologa', color: 'warning' },
+  APPROVED: { label: 'Odobrio dermatolog', color: 'success' },
+  REJECTED: { label: 'Odbio dermatolog', color: 'error' },
+  WITHDRAWN: { label: 'Povučeno', color: 'error' },
+}
+
+export function roman(value: number): string {
+  return ['', 'I', 'II', 'III', 'IV', 'V', 'VI'][value] ?? '-'
+}
+
+export function formatDate(value: string): string {
+  return new Date(value).toLocaleString('sr-Latn-RS', { dateStyle: 'medium', timeStyle: 'short' })
+}
+
+export function scoreLabel(condition: string, score: number | null): string {
+  if (score === null) {
+    return ''
+  }
+  if (condition === 'ACNE') {
+    return `GAGS ${score}`
+  }
+  if (condition === 'ATOPIC_DERMATITIS') {
+    return `SCORAD ${score}`
+  }
+  return String(score)
+}

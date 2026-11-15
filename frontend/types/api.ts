@@ -117,3 +117,83 @@ export interface ProfileResponse {
   breastfeeding: boolean
   updatedAt: string
 }
+
+export type Condition =
+  | 'ACNE'
+  | 'ROSACEA'
+  | 'PERIORAL_DERMATITIS'
+  | 'ATOPIC_DERMATITIS'
+  | 'SEBORRHEIC_DERMATITIS'
+  | 'CONTACT_DERMATITIS'
+export type Severity = 'MILD' | 'MODERATE' | 'SEVERE' | 'VERY_SEVERE'
+export type RosaceaSubtype = 'ETR' | 'PPR' | 'PHYMATOUS' | 'OCULAR'
+export type RecommendationStatus = 'ACTIVE' | 'PENDING_REVIEW' | 'APPROVED' | 'REJECTED' | 'WITHDRAWN'
+export type RoutineSlot = 'MORNING' | 'EVENING'
+export type RoutineStep = 'CLEANSING' | 'TREATMENT' | 'HYDRATION' | 'SPF'
+
+export interface Diagnosis {
+  condition: Condition
+  severity: Severity | null
+  subtype: RosaceaSubtype | null
+  score: number | null
+}
+
+export interface ExcludedDiagnosis {
+  condition: Condition
+  reason: string
+}
+
+export interface Recommendation {
+  id: number
+  origin: 'ANALYSIS' | 'CEP'
+  forCondition: Condition | null
+  sastojak: string
+  koncentracija: number | null
+  form: string
+  slot: RoutineSlot
+  step: RoutineStep
+  frequency: string
+  requiresPrescription: boolean
+  status: RecommendationStatus
+  reason: string
+  source: string
+  ruleName: string
+  warnings: string[]
+  reviewComment: string | null
+  createdAt: string
+}
+
+export interface Referral {
+  forCondition: Condition
+  specialist: string
+  reason: string
+  source: string
+}
+
+export interface SafetyNote {
+  text: string
+  source: string
+}
+
+export interface ExplanationStep {
+  ruleName: string
+  agendaGroup: string
+  source: string
+  description: string
+}
+
+export interface AnalysisResponse {
+  id: number
+  createdAt: string
+  fototip: number
+  med: number
+  diagnoses: Diagnosis[]
+  excludedDiagnoses: ExcludedDiagnosis[]
+  morningRoutine: Recommendation[]
+  eveningRoutine: Recommendation[]
+  notInRoutine: Recommendation[]
+  referrals: Referral[]
+  safetyNotes: SafetyNote[]
+  contactDermatitisCauses: string[]
+  explanation: ExplanationStep[]
+}

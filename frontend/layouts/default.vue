@@ -54,7 +54,10 @@ const { smAndDown: mobile } = useDisplay()
 const drawer = ref(false)
 
 const NAVIGATION: Record<Role, { to: string; label: string }[]> = {
-  USER: [{ to: '/questionnaire', label: 'Upitnik' }],
+  USER: [
+    { to: '/results', label: 'Rezultati' },
+    { to: '/questionnaire', label: 'Upitnik' },
+  ],
   DERMATOLOGIST: [],
   ADMIN: [],
 }
