@@ -54,6 +54,7 @@
 </template>
 
 <script setup lang="ts">
+import { ref } from 'vue'
 import { mdiEye, mdiEyeOff } from '@mdi/js'
 import { ApiError } from '~/composables/useApi'
 import { useAuthStore } from '~/stores/auth'

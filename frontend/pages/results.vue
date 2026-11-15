@@ -154,6 +154,7 @@
 </template>
 
 <script setup lang="ts">
+import { ref, onMounted } from 'vue'
 import { ApiError } from '~/composables/useApi'
 import type { AnalysisResponse } from '~/types/api'
 

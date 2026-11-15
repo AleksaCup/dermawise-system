@@ -45,6 +45,7 @@
 </template>
 
 <script setup lang="ts">
+import { ref, computed } from 'vue'
 import { useDisplay } from 'vuetify'
 import { ROLE_LABELS, useAuthStore } from '~/stores/auth'
 import type { Role } from '~/types/api'

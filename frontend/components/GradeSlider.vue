@@ -19,6 +19,7 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
 const props = withDefaults(defineProps<{ label: string; max?: number; labels?: string[] }>(), {
   max: 3,
   labels: () => GRADE_LABELS,
