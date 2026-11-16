@@ -4,9 +4,9 @@
 
     <v-row>
       <v-col cols="12" md="6">
-        <v-switch v-model="model.pregnant" label="Trudnoća" />
-        <v-switch v-model="model.breastfeeding" label="Dojenje" />
-        <v-switch v-model="model.hormonalTherapy" label="Hormonska terapija (npr. kontraceptivi)" />
+        <v-checkbox v-model="model.pregnant" label="Trudnoća" />
+        <v-checkbox v-model="model.breastfeeding" label="Dojenje" />
+        <v-checkbox v-model="model.hormonalTherapy" label="Hormonska terapija (npr. kontraceptivi)" />
       </v-col>
       <v-col cols="12" md="6">
         <v-text-field

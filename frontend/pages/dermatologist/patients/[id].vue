@@ -2,12 +2,7 @@
   <section>
     <NuxtLink to="/dermatologist/patients" class="text-body-2">Nazad na pacijente</NuxtLink>
     <h1 class="page-title mt-2">{{ profile?.fullName ?? 'Pacijent' }}</h1>
-    <p v-if="profile" class="page-lead">
-      Fototip {{ profile.fototip ? roman(profile.fototip) : 'još nije određen' }}
-      <span v-if="profile.med">, MED {{ profile.med }} mJ/cm²</span>
-      <span v-if="profile.pregnant">, trudnoća</span>
-      <span v-if="profile.breastfeeding">, dojenje</span>
-    </p>
+    <p v-if="profile" class="page-lead">{{ summary }}</p>
 
     <v-alert v-if="error" type="error" class="mb-6" role="alert">{{ error }}</v-alert>
 
@@ -50,7 +45,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { ApiError } from '~/composables/useApi'
 import type { AnalysisResponse, CepAlert, ProfileResponse } from '~/types/api'
 
@@ -63,6 +58,24 @@ const dermatologistApi = useDermatologistApi()
 const tab = ref('analysis')
 const profile = ref<ProfileResponse | null>(null)
 const analysis = ref<AnalysisResponse | null>(null)
+
+const summary = computed(() => {
+  const p = profile.value
+  if (!p) {
+    return ''
+  }
+  const parts = [`Fototip ${p.fototip ? roman(p.fototip) : 'još nije određen'}`]
+  if (p.med) {
+    parts.push(`MED ${p.med} mJ/cm²`)
+  }
+  if (p.pregnant) {
+    parts.push('trudnoća')
+  }
+  if (p.breastfeeding) {
+    parts.push('dojenje')
+  }
+  return parts.join(', ')
+})
 const alerts = ref<CepAlert[]>([])
 const loading = ref(true)
 const error = ref('')

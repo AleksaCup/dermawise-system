@@ -3,7 +3,7 @@
     <v-card class="mb-6">
       <v-card-title>Da li je hipoteza dokazana?</v-card-title>
       <v-card-text>
-        <p class="muted">
+        <p class="muted mb-4">
           Sistem kreće od cilja i unazad traži nalaze koji ga dokazuju, prema NRS kriterijumima i nalazima iz upitnika i
           dnevnika.
         </p>
@@ -34,7 +34,7 @@
         <v-card class="h-100">
           <v-card-title>Uzročnik kontaktne reakcije</v-card-title>
           <v-card-text>
-            <p class="muted">
+            <p class="muted mb-4">
               Traži sastojak iz proizvoda uvedenog u poslednjih 14 dana koji je poznat alergen (ili sa njim unakrsno
               reaguje), uz simptom na mestu gde se proizvod nanosi.
             </p>
@@ -64,7 +64,7 @@
         <v-card class="h-100">
           <v-card-title>Provera sastojka</v-card-title>
           <v-card-text>
-            <p class="muted">Da li je sastojak poznat alergen i kojim grupama pripada.</p>
+            <p class="muted mb-4">Da li je sastojak poznat alergen i kojim grupama pripada.</p>
             <v-form class="d-flex ga-2 align-start" @submit.prevent="checkAllergen">
               <v-text-field v-model="ingredient" label="Naziv sastojka" hide-details class="flex-grow-1" />
               <v-btn type="submit" color="primary" variant="outlined" class="mt-2" :loading="loadingAllergen" :disabled="!ingredient.trim()">
