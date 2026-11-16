@@ -285,3 +285,36 @@ export interface TemplateRuleRequest {
   maxKoncentracija: number
   napomena: string
 }
+
+export interface UserRow {
+  id: number
+  email: string
+  fullName: string
+  role: Role
+  active: boolean
+  createdAt: string
+}
+
+export interface RuleInfo {
+  name: string
+  agendaGroup: string
+  source: string
+  opis: string
+}
+
+export interface KnowledgeBase {
+  name: string
+  rules: number
+  queries: number
+  rulesPerAgendaGroup: Record<string, number>
+  ruleList: RuleInfo[]
+  queryList: string[]
+}
+
+export interface KnowledgeBaseInfo {
+  version: number
+  rebuiltAt: string
+  templateRows: number
+  openCepSessions: number
+  bases: KnowledgeBase[]
+}

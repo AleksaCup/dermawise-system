@@ -66,7 +66,10 @@ const NAVIGATION: Record<Role, { to: string; label: string }[]> = {
     { to: '/dermatologist/review', label: 'Na čekanju' },
     { to: '/dermatologist/templates', label: 'Koncentracije' },
   ],
-  ADMIN: [],
+  ADMIN: [
+    { to: '/admin/knowledge-base', label: 'Baza znanja' },
+    { to: '/admin/users', label: 'Korisnici' },
+  ],
 }
 
 const links = computed(() => (auth.role ? NAVIGATION[auth.role] : []))
