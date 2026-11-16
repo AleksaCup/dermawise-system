@@ -208,3 +208,24 @@ export function nowForInput(): string {
 export function inputToIso(value: string): string {
   return new Date(value).toISOString()
 }
+
+export const FINDING_LABELS: Record<string, string> = {
+  PERZISTENTNI_ERITEM: 'Trajno crvenilo',
+  CENTROFACIJALNA_DISTRIBUCIJA: 'Promene na sredini lica',
+  TELANGIEKTAZIJE: 'Telangiektazije',
+  KOMEDONI: 'Komedoni',
+  PAPULE_PUSTULE_BEZ_KOMEDONA: 'Papule i pustule bez komedona',
+  FLUSHING_UPITNIK: 'Flushing prema upitniku',
+  FLUSHING_DNEVNIK: 'Flushing prema dnevniku',
+  OKULARNI_SIMPTOMI: 'Simptomi oka',
+  FIMATOZNE_PROMENE: 'Zadebljanje kože',
+  PERIORALNA_DISTRIBUCIJA: 'Promene oko usta',
+  PERIORALNE_PAPULE: 'Papule oko usta',
+  SKORASNJI_STEROID: 'Skorašnji kortikosteroid',
+}
+
+export const GOALS = [
+  { value: 'rozaceja', title: 'Rozaceja' },
+  { value: 'akne', title: 'Akne' },
+  { value: 'perioralni-dermatitis', title: 'Perioralni dermatitis' },
+]

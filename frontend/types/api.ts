@@ -229,3 +229,21 @@ export interface DiaryEntryResponse {
   alerts: CepAlert[]
   recommendations: Recommendation[]
 }
+
+export interface HypothesisResponse {
+  goal: string
+  query: string
+  proven: boolean
+  provenThrough: string[]
+}
+
+export interface ContactCause {
+  sastojak: string
+  proizvod: string
+}
+
+export interface AllergenCheck {
+  sastojak: string
+  knownAllergen: boolean
+  groups: string[]
+}
