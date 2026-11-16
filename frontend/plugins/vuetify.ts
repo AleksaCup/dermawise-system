@@ -1,4 +1,5 @@
 import 'vuetify/styles'
+import '~/assets/main.css'
 import { createVuetify } from 'vuetify'
 import { aliases, mdi } from 'vuetify/iconsets/mdi-svg'
 
@@ -42,7 +43,7 @@ export default defineNuxtPlugin((nuxtApp) => {
       VSelect: { variant: 'outlined', density: 'comfortable', color: 'primary' },
       VCombobox: { variant: 'outlined', density: 'comfortable', color: 'primary' },
       VCheckbox: { color: 'primary', density: 'comfortable', hideDetails: 'auto' },
-      VSwitch: { color: 'primary', density: 'comfortable', inset: true, hideDetails: 'auto' },
+      VSwitch: { color: 'primary', density: 'comfortable', hideDetails: 'auto' },
       VChip: { size: 'small', variant: 'tonal' },
       VAlert: { variant: 'tonal', density: 'comfortable' },
       VTable: { density: 'comfortable' },
