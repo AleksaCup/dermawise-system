@@ -28,11 +28,20 @@
             autocomplete="new-password"
             hint="Najmanje 6 znakova"
             persistent-hint
-            :append-inner-icon="showPassword ? mdiEyeOff : mdiEye"
             :error-messages="fieldError('password')"
             class="mb-4"
-            @click:append-inner="showPassword = !showPassword"
-          />
+          >
+            <template #append-inner>
+              <v-btn
+                :icon="showPassword ? mdiEyeOff : mdiEye"
+                :aria-label="showPassword ? 'Sakrij lozinku' : 'Prikaži lozinku'"
+                variant="text"
+                size="small"
+                density="comfortable"
+                @click="showPassword = !showPassword"
+              />
+            </template>
+          </v-text-field>
           <v-alert v-if="error" type="error" class="mb-4" role="alert">{{ error }}</v-alert>
           <v-btn type="submit" color="primary" block size="large" :loading="loading">Napravi nalog</v-btn>
         </v-form>

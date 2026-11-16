@@ -5,8 +5,8 @@
         <div class="step">{{ STEP_LABELS[recommendation.step] }}</div>
         <div class="name">
           {{ recommendation.sastojak }}
-          <span v-if="recommendation.koncentracija !== null" class="tabular">{{ recommendation.koncentracija }}%</span>
-          <span class="muted">· {{ recommendation.form }}</span>
+          <span v-if="recommendation.koncentracija !== null" class="tabular">{{ ` ${recommendation.koncentracija}%` }}</span>
+          <span class="muted">{{ ` · ${recommendation.form}` }}</span>
         </div>
         <div class="muted text-body-2">{{ recommendation.frequency }}</div>
       </div>

@@ -78,6 +78,16 @@ class AnalysisControllerTest {
     }
 
     @Test
+    void newUserHasNoProfileAndNoAnalysisYet() throws Exception {
+        String token = ApiTestSupport.registerUser(mvc, mapper);
+
+        mvc.perform(get("/api/profile").header("Authorization", token))
+                .andExpect(status().isNoContent());
+        mvc.perform(get("/api/analysis/latest").header("Authorization", token))
+                .andExpect(status().isNoContent());
+    }
+
+    @Test
     void invalidQuestionnaireIs400() throws Exception {
         String token = ApiTestSupport.registerUser(mvc, mapper);
         ObjectNode questionnaire = ApiTestSupport.questionnaire(mapper, "moderate-acne");

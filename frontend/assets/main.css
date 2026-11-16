@@ -1,5 +1,5 @@
 :root {
-  --dw-font: 'Atkinson Hyperlegible', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --dw-font: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   --dw-border: #e2e8f0;
 }
 
@@ -14,15 +14,16 @@ body,
   line-height: 1.55;
 }
 
-.v-btn {
+.v-application .v-btn {
   text-transform: none;
   letter-spacing: normal;
   font-weight: 700;
 }
 
-.v-card-title {
+.v-application .v-card-title {
   font-size: 1.05rem;
   font-weight: 700;
+  letter-spacing: normal;
   line-height: 1.4;
   white-space: normal;
 }

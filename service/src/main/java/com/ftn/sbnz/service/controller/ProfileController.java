@@ -6,6 +6,7 @@ import com.ftn.sbnz.service.security.SecurityUser;
 import com.ftn.sbnz.service.service.ProfileService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -21,8 +22,10 @@ public class ProfileController {
     private final ProfileService profileService;
 
     @GetMapping
-    public ProfileResponse get(@AuthenticationPrincipal SecurityUser principal) {
-        return profileService.get(principal.getUser());
+    public ResponseEntity<ProfileResponse> get(@AuthenticationPrincipal SecurityUser principal) {
+        return profileService.find(principal.getUser())
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.noContent().build());
     }
 
     @PutMapping("/questionnaire")

@@ -4,6 +4,6 @@ export function useAnalysisApi() {
   const api = useApi()
   return {
     run: () => api.post<AnalysisResponse>('/api/analysis'),
-    latest: () => api.get<AnalysisResponse>('/api/analysis/latest'),
+    latest: () => api.find<AnalysisResponse>('/api/analysis/latest'),
   }
 }

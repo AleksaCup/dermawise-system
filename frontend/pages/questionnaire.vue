@@ -45,6 +45,11 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import StepLesions from '~/components/questionnaire/StepLesions.vue'
+import StepLifestyle from '~/components/questionnaire/StepLifestyle.vue'
+import StepPhototype from '~/components/questionnaire/StepPhototype.vue'
+import StepRosacea from '~/components/questionnaire/StepRosacea.vue'
+import StepScorad from '~/components/questionnaire/StepScorad.vue'
 import { ApiError } from '~/composables/useApi'
 import type { IngredientDto, ProductDto, Questionnaire } from '~/types/api'
 
@@ -72,11 +77,11 @@ const form = ref<Questionnaire>(emptyQuestionnaire())
 onMounted(async () => {
   try {
     const profile = await profileApi.get()
-    form.value = profile.questionnaire
-  } catch (e) {
-    if (!(e instanceof ApiError && e.status === 404)) {
-      error.value = e instanceof ApiError ? e.message : 'Profil nije učitan'
+    if (profile) {
+      form.value = profile.questionnaire
     }
+  } catch (e) {
+    error.value = e instanceof ApiError ? e.message : 'Profil nije učitan'
   } finally {
     loading.value = false
   }

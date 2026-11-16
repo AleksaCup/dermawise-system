@@ -6,6 +6,7 @@ import com.ftn.sbnz.service.security.SecurityUser;
 import com.ftn.sbnz.service.service.AnalysisService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -29,8 +30,10 @@ public class AnalysisController {
     }
 
     @GetMapping("/latest")
-    public AnalysisResponse latest(@AuthenticationPrincipal SecurityUser principal) {
-        return analysisService.latest(principal.getUser());
+    public ResponseEntity<AnalysisResponse> latest(@AuthenticationPrincipal SecurityUser principal) {
+        return analysisService.findLatest(principal.getUser())
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.noContent().build());
     }
 
     @GetMapping

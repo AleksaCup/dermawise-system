@@ -19,7 +19,6 @@ import com.ftn.sbnz.service.entity.AppUser;
 import com.ftn.sbnz.service.entity.RecommendationEntity;
 import com.ftn.sbnz.service.entity.RecommendationOrigin;
 import com.ftn.sbnz.service.entity.SkinProfile;
-import com.ftn.sbnz.service.exception.NotFoundException;
 import com.ftn.sbnz.service.repository.AnalysisResultRepository;
 import com.ftn.sbnz.service.repository.RecommendationRepository;
 import com.ftn.sbnz.service.repository.SkinProfileRepository;
@@ -31,6 +30,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -79,10 +79,8 @@ public class AnalysisService {
     }
 
     @Transactional(readOnly = true)
-    public AnalysisResponse latest(AppUser user) {
-        return analyses.findFirstByUserOrderByCreatedAtDesc(user)
-                .map(this::toResponse)
-                .orElseThrow(() -> new NotFoundException("Još nema analize za ovog korisnika"));
+    public Optional<AnalysisResponse> findLatest(AppUser user) {
+        return analyses.findFirstByUserOrderByCreatedAtDesc(user).map(this::toResponse);
     }
 
     @Transactional(readOnly = true)
