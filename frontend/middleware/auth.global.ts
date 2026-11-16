@@ -7,7 +7,7 @@ export default defineNuxtRouteMiddleware((to) => {
   }
 
   if (to.meta.public) {
-    if (auth.isLoggedIn && (to.path === '/login' || to.path === '/register')) {
+    if (auth.isLoggedIn && ['/', '/login', '/register'].includes(to.path)) {
       return navigateTo(auth.homePath())
     }
     return

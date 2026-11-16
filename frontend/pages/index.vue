@@ -7,13 +7,8 @@
     </p>
 
     <div class="d-flex ga-2 mb-8">
-      <template v-if="auth.isLoggedIn">
-        <p class="muted">Prijavljeni ste kao {{ auth.user?.fullName }}.</p>
-      </template>
-      <template v-else>
-        <v-btn to="/login" color="primary">Prijava</v-btn>
-        <v-btn to="/register" variant="outlined">Registracija</v-btn>
-      </template>
+      <v-btn to="/login" color="primary">Prijava</v-btn>
+      <v-btn to="/register" variant="outlined">Registracija</v-btn>
     </div>
 
     <v-row>
@@ -28,11 +23,7 @@
 </template>
 
 <script setup lang="ts">
-import { useAuthStore } from '~/stores/auth'
-
 definePageMeta({ public: true })
-
-const auth = useAuthStore()
 const items = [
   {
     title: 'Upitnik',
