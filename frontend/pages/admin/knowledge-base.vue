@@ -30,8 +30,8 @@
       <template v-if="base">
         <p class="muted">
           {{ base.rules }} pravila i {{ base.queries }} upita.
-          <span v-for="(count, group) in base.rulesPerAgendaGroup" :key="group" class="mr-3">
-            {{ PHASE_LABELS[group] ?? group }}: <span class="tabular">{{ count }}</span>
+          <span v-for="option in phaseOptions" :key="option.value" class="mr-3">
+            {{ option.title }}: <span class="tabular">{{ base.rulesPerAgendaGroup[option.value] }}</span>
           </span>
         </p>
 
@@ -120,13 +120,22 @@ const stats = computed(() => {
 
 const base = computed(() => info.value?.bases.find((b) => b.name === baseName.value))
 
+const PHASE_ORDER = Object.keys(PHASE_LABELS)
+
+function phaseIndex(group: string) {
+  const index = PHASE_ORDER.indexOf(group)
+  return index === -1 ? PHASE_ORDER.length : index
+}
+
 const phaseOptions = computed(() =>
-  Object.keys(base.value?.rulesPerAgendaGroup ?? {}).map((g) => ({ value: g, title: PHASE_LABELS[g] ?? g })),
+  Object.keys(base.value?.rulesPerAgendaGroup ?? {})
+    .sort((a, b) => phaseIndex(a) - phaseIndex(b))
+    .map((g) => ({ value: g, title: PHASE_LABELS[g] ?? g })),
 )
 
 const filteredRules = computed(() => {
   const term = (search.value ?? '').trim().toLowerCase()
-  return (base.value?.ruleList ?? []).filter((r) => {
+  const rules = (base.value?.ruleList ?? []).filter((r) => {
     if (phase.value && r.agendaGroup !== phase.value) {
       return false
     }
@@ -135,6 +144,7 @@ const filteredRules = computed(() => {
     }
     return [r.name, r.opis, r.source].some((text) => text?.toLowerCase().includes(term))
   })
+  return rules.sort((a, b) => phaseIndex(a.agendaGroup) - phaseIndex(b.agendaGroup) || a.name.localeCompare(b.name))
 })
 </script>
 
