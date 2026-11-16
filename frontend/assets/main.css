@@ -1,0 +1,67 @@
+:root {
+  --dw-font: 'Atkinson Hyperlegible', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --dw-border: #e2e8f0;
+}
+
+html,
+body,
+.v-application,
+.v-application [class*='text-'] {
+  font-family: var(--dw-font) !important;
+}
+
+.v-application {
+  line-height: 1.55;
+}
+
+.v-btn {
+  text-transform: none;
+  letter-spacing: normal;
+  font-weight: 700;
+}
+
+.v-card-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  line-height: 1.4;
+  white-space: normal;
+}
+
+.page-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0 0 4px;
+}
+
+.page-lead {
+  color: #475569;
+  margin: 0 0 24px;
+  max-width: 70ch;
+}
+
+.section-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin: 32px 0 12px;
+}
+
+.muted {
+  color: #475569;
+}
+
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+a {
+  color: rgb(var(--v-theme-primary));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}

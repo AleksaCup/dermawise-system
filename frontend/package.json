@@ -1,0 +1,24 @@
+{
+  "name": "dermawise-frontend",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "nuxt dev",
+    "build": "nuxt build",
+    "preview": "nuxt preview",
+    "typecheck": "nuxt typecheck",
+    "postinstall": "nuxt prepare"
+  },
+  "dependencies": {
+    "@mdi/js": "^7.4.47",
+    "@pinia/nuxt": "^0.11.3",
+    "nuxt": "^3.21.11",
+    "pinia": "^3.0.4",
+    "vuetify": "^3.13.7"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3",
+    "vite-plugin-vuetify": "^2.1.3",
+    "vue-tsc": "^3.3.14"
+  }
+}
