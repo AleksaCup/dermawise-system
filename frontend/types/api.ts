@@ -266,3 +266,22 @@ export interface PendingRecommendation {
   pregnant: boolean
   recommendation: Recommendation
 }
+
+export interface TemplateRule {
+  id: number
+  sastojak: string
+  minFototip: number
+  maxFototip: number
+  maxKoncentracija: number
+  napomena: string
+  updatedBy: string
+  updatedAt: string
+}
+
+export interface TemplateRuleRequest {
+  sastojak: string
+  minFototip: number
+  maxFototip: number
+  maxKoncentracija: number
+  napomena: string
+}
