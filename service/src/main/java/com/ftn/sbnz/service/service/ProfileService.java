@@ -18,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Instant;
 import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -51,8 +52,8 @@ public class ProfileService {
     }
 
     @Transactional(readOnly = true)
-    public ProfileResponse get(AppUser user) {
-        return toResponse(require(user));
+    public Optional<ProfileResponse> find(AppUser user) {
+        return profiles.findByUser(user).map(this::toResponse);
     }
 
     public SkinProfile require(AppUser user) {

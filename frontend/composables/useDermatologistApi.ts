@@ -12,8 +12,8 @@ export function useDermatologistApi() {
   const base = '/api/dermatologist'
   return {
     patients: () => api.get<PatientSummary[]>(`${base}/patients`),
-    profile: (id: number) => api.get<ProfileResponse>(`${base}/patients/${id}/profile`),
-    analysis: (id: number) => api.get<AnalysisResponse>(`${base}/patients/${id}/analysis`),
+    profile: (id: number) => api.find<ProfileResponse>(`${base}/patients/${id}/profile`),
+    analysis: (id: number) => api.find<AnalysisResponse>(`${base}/patients/${id}/analysis`),
     alerts: (id: number) => api.get<CepAlert[]>(`${base}/patients/${id}/alerts`),
     pending: () => api.get<PendingRecommendation[]>(`${base}/recommendations/pending`),
     approve: (id: number, comment: string) =>

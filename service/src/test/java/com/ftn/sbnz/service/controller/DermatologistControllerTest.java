@@ -108,5 +108,8 @@ class DermatologistControllerTest {
                 .andExpect(jsonPath("$.questionnaire.lifestyle.pregnant").value(true));
         mvc.perform(get("/api/dermatologist/patients/999999/profile").header("Authorization", derm))
                 .andExpect(status().isNotFound());
+        mvc.perform(get("/api/dermatologist/patients/" + milica.get("id").asLong() + "/analysis")
+                        .header("Authorization", derm))
+                .andExpect(status().isNoContent());
     }
 }

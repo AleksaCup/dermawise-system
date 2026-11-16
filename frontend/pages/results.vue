@@ -45,13 +45,12 @@ const error = ref('')
 
 onMounted(async () => {
   try {
-    await profileApi.get()
-    hasProfile.value = true
-    result.value = await analysisApi.latest()
-  } catch (e) {
-    if (!(e instanceof ApiError && e.status === 404)) {
-      error.value = e instanceof ApiError ? e.message : 'Rezultati nisu učitani'
+    hasProfile.value = (await profileApi.get()) !== null
+    if (hasProfile.value) {
+      result.value = await analysisApi.latest()
     }
+  } catch (e) {
+    error.value = e instanceof ApiError ? e.message : 'Rezultati nisu učitani'
   } finally {
     loading.value = false
   }

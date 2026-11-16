@@ -67,21 +67,10 @@ const alerts = ref<CepAlert[]>([])
 const loading = ref(true)
 const error = ref('')
 
-async function orNull<T>(request: Promise<T>): Promise<T | null> {
-  try {
-    return await request
-  } catch (e) {
-    if (e instanceof ApiError && e.status === 404) {
-      return null
-    }
-    throw e
-  }
-}
-
 onMounted(async () => {
   try {
-    profile.value = await orNull(dermatologistApi.profile(patientId))
-    analysis.value = await orNull(dermatologistApi.analysis(patientId))
+    profile.value = await dermatologistApi.profile(patientId)
+    analysis.value = await dermatologistApi.analysis(patientId)
     alerts.value = await dermatologistApi.alerts(patientId)
   } catch (e) {
     error.value = e instanceof ApiError ? e.message : 'Podaci o pacijentu nisu učitani'

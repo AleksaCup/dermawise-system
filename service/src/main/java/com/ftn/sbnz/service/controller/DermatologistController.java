@@ -15,6 +15,7 @@ import com.ftn.sbnz.service.service.ProfileService;
 import com.ftn.sbnz.service.service.ReviewService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -42,13 +43,17 @@ public class DermatologistController {
     }
 
     @GetMapping("/patients/{id}/profile")
-    public ProfileResponse profile(@PathVariable Long id) {
-        return profileService.get(patientService.require(id));
+    public ResponseEntity<ProfileResponse> profile(@PathVariable Long id) {
+        return profileService.find(patientService.require(id))
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.noContent().build());
     }
 
     @GetMapping("/patients/{id}/analysis")
-    public AnalysisResponse latestAnalysis(@PathVariable Long id) {
-        return analysisService.latest(patientService.require(id));
+    public ResponseEntity<AnalysisResponse> latestAnalysis(@PathVariable Long id) {
+        return analysisService.findLatest(patientService.require(id))
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.noContent().build());
     }
 
     @GetMapping("/patients/{id}/alerts")

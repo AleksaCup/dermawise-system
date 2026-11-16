@@ -77,11 +77,11 @@ const form = ref<Questionnaire>(emptyQuestionnaire())
 onMounted(async () => {
   try {
     const profile = await profileApi.get()
-    form.value = profile.questionnaire
-  } catch (e) {
-    if (!(e instanceof ApiError && e.status === 404)) {
-      error.value = e instanceof ApiError ? e.message : 'Profil nije učitan'
+    if (profile) {
+      form.value = profile.questionnaire
     }
+  } catch (e) {
+    error.value = e instanceof ApiError ? e.message : 'Profil nije učitan'
   } finally {
     loading.value = false
   }
