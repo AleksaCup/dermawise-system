@@ -61,7 +61,10 @@ const NAVIGATION: Record<Role, { to: string; label: string }[]> = {
     { to: '/diary', label: 'Dnevnik' },
     { to: '/hypothesis', label: 'Hipoteze' },
   ],
-  DERMATOLOGIST: [],
+  DERMATOLOGIST: [
+    { to: '/dermatologist/patients', label: 'Pacijenti' },
+    { to: '/dermatologist/review', label: 'Na čekanju' },
+  ],
   ADMIN: [],
 }
 

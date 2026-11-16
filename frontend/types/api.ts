@@ -247,3 +247,22 @@ export interface AllergenCheck {
   knownAllergen: boolean
   groups: string[]
 }
+
+export interface PatientSummary {
+  id: number
+  fullName: string
+  email: string
+  questionnaireFilled: boolean
+  fototip: number
+  med: number
+  pregnant: boolean
+  lastAnalysisAt: string | null
+  pendingReviews: number
+}
+
+export interface PendingRecommendation {
+  patientId: number
+  patientName: string
+  pregnant: boolean
+  recommendation: Recommendation
+}

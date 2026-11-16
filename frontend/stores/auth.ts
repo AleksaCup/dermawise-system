@@ -64,6 +64,9 @@ export const useAuthStore = defineStore('auth', {
       if (this.role === 'USER') {
         return '/results'
       }
+      if (this.role === 'DERMATOLOGIST') {
+        return '/dermatologist/patients'
+      }
       return '/'
     },
   },
