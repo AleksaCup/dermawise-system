@@ -95,6 +95,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
+import EntryForm from '~/components/diary/EntryForm.vue'
 import { ApiError } from '~/composables/useApi'
 import type { CepAlert, DiaryEntry, DiaryEntryResponse, Recommendation } from '~/types/api'
 
