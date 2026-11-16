@@ -165,3 +165,46 @@ export function scoreLabel(condition: string, score: number | null): string {
   }
   return String(score)
 }
+
+export const FLUSH_TRIGGERS = options({
+  HRANA: 'Hrana',
+  ALKOHOL: 'Alkohol',
+  TOPLOTA: 'Toplota',
+  STRES: 'Stres',
+  KOZMETIKA: 'Kozmetika',
+})
+
+export const SYMPTOM_TYPES = options({
+  ERYTHEMA: 'Crvenilo',
+  STINGING: 'Peckanje',
+  ITCHING: 'Svrab',
+  SCALING: 'Ljuštenje',
+})
+
+export const ENTRY_TYPE_LABELS: Record<string, string> = {
+  FLUSHING: 'Flushing',
+  SUN: 'Sunce',
+  NEW_PRODUCT: 'Novi proizvod',
+  SYMPTOM: 'Simptom',
+}
+
+export const ALERT_LABELS: Record<string, string> = {
+  ROSACEA_SUSPICION: 'Sumnja na rozaceju',
+  DOMINANT_TRIGGER: 'Okidač flushinga',
+  HIGH_UV_EXPOSURE: 'Previše sunca',
+  VERY_HIGH_UV: 'Vrlo visok UV',
+  PHOTOAGING_RISK: 'Rizik od fotostarenja',
+  SEBORRHEIC_SYMPTOMS: 'Seboroični simptomi',
+  CONTACT_REACTION: 'Moguća kontaktna reakcija',
+  SAFETY_NOTE: 'Bezbednosna napomena',
+}
+
+export function nowForInput(): string {
+  const now = new Date()
+  now.setMinutes(now.getMinutes() - now.getTimezoneOffset())
+  return now.toISOString().slice(0, 16)
+}
+
+export function inputToIso(value: string): string {
+  return new Date(value).toISOString()
+}

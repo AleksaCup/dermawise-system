@@ -197,3 +197,35 @@ export interface AnalysisResponse {
   contactDermatitisCauses: string[]
   explanation: ExplanationStep[]
 }
+
+export type FlushTrigger = 'HRANA' | 'ALKOHOL' | 'TOPLOTA' | 'STRES' | 'KOZMETIKA'
+export type SymptomType = 'ERYTHEMA' | 'STINGING' | 'ITCHING' | 'SCALING'
+export type DiaryEntryType = 'FLUSHING' | 'SUN' | 'NEW_PRODUCT' | 'SYMPTOM'
+
+export interface DiaryEntry {
+  id: number
+  type: DiaryEntryType
+  occurredAt: string
+  durationMinutes: number | null
+  trigger: FlushTrigger | null
+  uvIndex: number | null
+  minutesInSun: number | null
+  sunscreenSpf: number | null
+  productName: string | null
+  symptomType: SymptomType | null
+  symptomLocation: BodyArea | null
+}
+
+export interface CepAlert {
+  id: number
+  type: string
+  message: string
+  occurredAt: string
+  seen: boolean
+}
+
+export interface DiaryEntryResponse {
+  entry: DiaryEntry
+  alerts: CepAlert[]
+  recommendations: Recommendation[]
+}
