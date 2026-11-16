@@ -23,6 +23,7 @@ The project proposal is in `DermaWise PP - final.pdf`.
 | `model` | `com.ftn.sbnz.model` | facts, enums, questionnaire classes, diary events, analysis result |
 | `kjar` | `com.ftn.sbnz.kjar` | DRL rules, templates, knowledge base factory, rule tests |
 | `service` | `com.ftn.sbnz.service` | Spring Boot REST API, the only module that runs |
+| `frontend` | | Nuxt 3 client (Vue 3, TypeScript, Pinia, Vuetify 3) |
 
 `kjar` depends on `model`, `service` depends on `kjar` and `model`.
 The root `pom.xml` builds them in that order.
@@ -52,6 +53,7 @@ When a dermatologist changes a template row, the service rebuilds all three and 
 
 - JDK 17
 - Docker with Docker Compose
+- Node.js 22 or newer (only to run the frontend outside Docker)
 
 Maven does not have to be installed, the project uses the Maven wrapper.
 
@@ -70,7 +72,8 @@ Service tests use an in memory H2 database.
 docker compose up --build
 ```
 
-This starts PostgreSQL 16 and the service on `http://localhost:8080` with the `dev` profile.
+This starts PostgreSQL 16, the service on `http://localhost:8080` with the `dev` profile
+and the frontend on `http://localhost:3000`.
 PostgreSQL is exposed on host port `5433`.
 
 Optional environment variables (for example in a `.env` file):
@@ -80,8 +83,9 @@ Optional environment variables (for example in a `.env` file):
 | `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD` | `dermawise` |
 | `POSTGRES_PORT` | `5433` |
 | `SERVICE_PORT` | `8080` |
+| `FRONTEND_PORT` | `3000` |
 | `SPRING_PROFILES_ACTIVE` | `dev` |
-| `CORS_ALLOWED_ORIGINS` | `http://localhost:3000` |
+| `CORS_ALLOWED_ORIGINS` | `http://localhost:<FRONTEND_PORT>` |
 
 Stop with `docker compose down`. Add `-v` to also remove the database volume.
 
@@ -94,6 +98,27 @@ SPRING_PROFILES_ACTIVE=dev ./mvnw -pl service spring-boot:run
 ```
 
 `JWT_SECRET` (base64, at least 64 bytes) should be set outside of local development.
+
+Frontend in development mode (with the service already running):
+
+```
+cd frontend
+npm install
+npm run dev
+```
+
+It opens on `http://localhost:3000` and calls the API at `NUXT_PUBLIC_API_BASE` (default `http://localhost:8080`).
+`npm run typecheck` and `npm run build` check the frontend.
+
+## Frontend pages
+
+| Role | Pages |
+|---|---|
+| USER | results, questionnaire (five steps), skin diary with alerts, hypothesis check |
+| DERMATOLOGIST | patients and patient details, prescription items waiting for review, concentration template editor |
+| ADMIN | knowledge base overview, users |
+
+The login page lists the demo accounts with a button that fills them in.
 
 ## Demo accounts
 
