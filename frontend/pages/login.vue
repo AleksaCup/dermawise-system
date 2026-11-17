@@ -44,19 +44,22 @@
 
     <v-card class="mt-6">
       <v-card-title>Demo nalozi</v-card-title>
-      <v-card-text>
-        <v-table density="compact">
-          <tbody>
-            <tr v-for="account in demoAccounts" :key="account.email">
-              <td>{{ account.email }}</td>
-              <td class="muted">{{ account.password }}</td>
-              <td class="muted">{{ account.note }}</td>
-              <td class="text-right">
-                <v-btn variant="text" size="small" @click="fill(account)">Popuni</v-btn>
-              </td>
-            </tr>
-          </tbody>
-        </v-table>
+      <v-card-text class="pt-0">
+        <p class="muted mb-2">Klik na nalog popunjava email i lozinku.</p>
+        <ul class="accounts">
+          <li v-for="account in demoAccounts" :key="account.email">
+            <button type="button" class="account" @click="fill(account)">
+              <span class="account-main">
+                <strong>{{ account.role }}</strong>
+                <span class="muted">{{ account.note }}</span>
+              </span>
+              <span class="account-login">
+                <span>{{ account.email }}</span>
+                <span class="muted">lozinka {{ account.password }}</span>
+              </span>
+            </button>
+          </li>
+        </ul>
       </v-card-text>
     </v-card>
   </div>
@@ -81,10 +84,10 @@ const error = ref('')
 const fieldErrors = ref<Record<string, string>>({})
 
 const demoAccounts = [
-  { email: 'ana@dermawise.rs', password: 'user123', note: 'korisnik, umerene akne' },
-  { email: 'milica@dermawise.rs', password: 'user123', note: 'korisnica, trudna' },
-  { email: 'dermatolog@dermawise.rs', password: 'derm123', note: 'dermatolog' },
-  { email: 'admin@dermawise.rs', password: 'admin123', note: 'administrator' },
+  { role: 'Ana', note: 'korisnica, umerene akne, fototip II', email: 'ana@dermawise.rs', password: 'user123' },
+  { role: 'Milica', note: 'korisnica, isti upitnik, trudna', email: 'milica@dermawise.rs', password: 'user123' },
+  { role: 'Dermatolog', note: 'pacijenti, potvrda recepata, koncentracije', email: 'dermatolog@dermawise.rs', password: 'derm123' },
+  { role: 'Administrator', note: 'baza znanja i korisnici', email: 'admin@dermawise.rs', password: 'admin123' },
 ]
 
 function fill(account: { email: string; password: string }) {
@@ -119,5 +122,61 @@ async function submit() {
 .auth-wrap {
   max-width: 520px;
   margin: 0 auto;
+}
+
+.accounts {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.account {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 4px 16px;
+  width: 100%;
+  min-height: 48px;
+  padding: 10px 12px;
+  margin: 0 -12px;
+  box-sizing: content-box;
+  text-align: left;
+  border-bottom: 1px solid var(--dw-border);
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.accounts li:last-child .account {
+  border-bottom: none;
+}
+
+.account:hover {
+  background: #f1f5f9;
+}
+
+.account:focus-visible {
+  outline: 2px solid rgb(var(--v-theme-primary));
+  outline-offset: 2px;
+}
+
+.account-main,
+.account-login {
+  display: flex;
+  flex-direction: column;
+  font-size: 0.9rem;
+}
+
+.account-login {
+  text-align: right;
+}
+
+@media (max-width: 480px) {
+  .account {
+    flex-direction: column;
+  }
+
+  .account-login {
+    text-align: left;
+  }
 }
 </style>
