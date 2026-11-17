@@ -3,8 +3,10 @@ package com.ftn.sbnz.service.controller;
 import com.ftn.sbnz.service.dto.AllergenCheckResponse;
 import com.ftn.sbnz.service.dto.ContactCause;
 import com.ftn.sbnz.service.dto.HypothesisResponse;
+import com.ftn.sbnz.service.dto.IngredientOption;
 import com.ftn.sbnz.service.security.SecurityUser;
 import com.ftn.sbnz.service.service.BackwardService;
+import com.ftn.sbnz.service.service.IngredientCatalogService;
 import com.ftn.sbnz.service.service.PatientService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -23,6 +25,7 @@ public class BackwardController {
 
     private final BackwardService backwardService;
     private final PatientService patientService;
+    private final IngredientCatalogService ingredientCatalog;
 
     @GetMapping("/hypotheses/{goal}")
     public HypothesisResponse hypothesis(@AuthenticationPrincipal SecurityUser principal,
@@ -42,5 +45,10 @@ public class BackwardController {
                                                @RequestParam String sastojak,
                                                @RequestParam(required = false) Long patientId) {
         return backwardService.allergenCheck(patientService.resolve(principal.getUser(), patientId), sastojak);
+    }
+
+    @GetMapping("/ingredients")
+    public List<IngredientOption> ingredients() {
+        return ingredientCatalog.all();
     }
 }

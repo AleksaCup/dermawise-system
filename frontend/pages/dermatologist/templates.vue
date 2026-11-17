@@ -62,7 +62,13 @@
         <v-card-title>{{ editing ? 'Izmena reda' : 'Novi red' }}</v-card-title>
         <v-card-text>
           <v-form @submit.prevent="save">
-            <v-text-field v-model="form.sastojak" label="Sastojak" hint="Naziv kao u preporukama, npr. retinol" persistent-hint class="mb-2" />
+            <IngredientField
+              v-model="form.sastojak"
+              label="Sastojak"
+              hint="Naziv kao u preporukama, npr. retinol ili adapalen"
+              :kinds="['THERAPY']"
+              class="mb-2"
+            />
             <v-row>
               <v-col cols="6">
                 <v-select v-model="form.minFototip" :items="phototypes" label="Od fototipa" />
@@ -109,6 +115,7 @@ import { onMounted, ref } from 'vue'
 import { mdiPlus } from '@mdi/js'
 import { ApiError } from '~/composables/useApi'
 import type { TemplateRule, TemplateRuleRequest } from '~/types/api'
+import IngredientField from '~/components/IngredientField.vue'
 
 definePageMeta({ roles: ['DERMATOLOGIST'] })
 

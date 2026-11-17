@@ -66,7 +66,7 @@
           <v-card-text>
             <p class="muted mb-4">Da li je sastojak poznat alergen i kojim grupama pripada.</p>
             <v-form class="d-flex ga-2 align-start" @submit.prevent="checkAllergen">
-              <v-text-field v-model="ingredient" label="Naziv sastojka" hide-details class="flex-grow-1" />
+              <IngredientField v-model="ingredient" label="Naziv sastojka" :kinds="['THERAPY', 'INGREDIENT', 'MIXTURE']" class="flex-grow-1" />
               <v-btn type="submit" color="primary" variant="outlined" class="mt-2" :loading="loadingAllergen" :disabled="!ingredient.trim()">
                 Proveri
               </v-btn>
@@ -94,6 +94,7 @@ import { computed, ref } from 'vue'
 import { mdiCheckCircleOutline, mdiCloseCircleOutline } from '@mdi/js'
 import { ApiError } from '~/composables/useApi'
 import type { AllergenCheck, ContactCause, HypothesisResponse } from '~/types/api'
+import IngredientField from '~/components/IngredientField.vue'
 
 const props = defineProps<{ patientId?: number }>()
 

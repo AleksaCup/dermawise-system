@@ -318,3 +318,11 @@ export interface KnowledgeBaseInfo {
   openCepSessions: number
   bases: KnowledgeBase[]
 }
+
+export type IngredientKind = 'THERAPY' | 'INGREDIENT' | 'GROUP' | 'MIXTURE'
+
+export interface IngredientOption {
+  name: string
+  kind: IngredientKind
+  partOf: string[]
+}

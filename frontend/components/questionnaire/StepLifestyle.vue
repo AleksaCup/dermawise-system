@@ -16,14 +16,11 @@
           max="1440"
           label="Koliko minuta dnevno ste na suncu"
         />
-        <v-combobox
+        <IngredientField
           v-model="model.allergies"
           label="Poznate alergije na sastojke"
-          hint="Upišite naziv sastojka i pritisnite Enter, npr. methylisothiazolinone"
-          persistent-hint
+          hint="Izaberite sa liste ili upišite naziv i pritisnite Enter. Može i cela grupa, npr. parabens."
           multiple
-          chips
-          closable-chips
         />
       </v-col>
     </v-row>
@@ -43,6 +40,7 @@
 <script setup lang="ts">
 import { mdiPlus } from '@mdi/js'
 import type { Questionnaire } from '~/types/api'
+import IngredientField from '~/components/IngredientField.vue'
 
 const model = defineModel<Questionnaire['lifestyle']>({ required: true })
 
