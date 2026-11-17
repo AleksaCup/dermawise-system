@@ -1,0 +1,54 @@
+{
+  "phototype": {
+    "skinColor": "LIGHT_BROWN",
+    "eyeColor": "HAZEL",
+    "hairColor": "DARK_BROWN",
+    "ethnicOrigin": "SOUTHERN_EUROPEAN",
+    "sunReaction": "BURNS_THEN_TANS",
+    "tanTendency": "GRADUAL"
+  },
+  "lesions": {
+    "FOREHEAD": "NONE",
+    "RIGHT_CHEEK": "NONE",
+    "LEFT_CHEEK": "NONE",
+    "NOSE": "NONE",
+    "CHIN": "NONE",
+    "CHEST_BACK": "NONE"
+  },
+  "rosacea": {
+    "persistentErythema": false,
+    "centrofacialDistribution": false,
+    "flushingPerWeek": 0,
+    "telangiectasia": false,
+    "papulesPustulesWithoutComedones": false,
+    "ocularSymptoms": false,
+    "phymatousChanges": false,
+    "flushingGrade": 0,
+    "persistentErythemaGrade": 0,
+    "telangiectasiaGrade": 0,
+    "papulesPustulesGrade": 0,
+    "papuleCount": 0,
+    "pustuleCount": 0,
+    "perioralDistribution": false,
+    "recentTopicalSteroid": false
+  },
+  "scorad": {
+    "affectedAreaPercent": 30,
+    "erythema": 2,
+    "edemaPapulation": 1,
+    "excoriation": 1,
+    "lichenification": 1,
+    "oozingCrusting": 0,
+    "dryness": 2,
+    "pruritus": 5,
+    "sleeplessness": 3
+  },
+  "lifestyle": {
+    "pregnant": false,
+    "breastfeeding": false,
+    "hormonalTherapy": false,
+    "allergies": [],
+    "currentProducts": [],
+    "dailySunMinutes": 30
+  }
+}

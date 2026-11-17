@@ -1,27 +1,21 @@
 package com.ftn.sbnz.service.config;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.ftn.sbnz.kjar.template.MaxConcentrationRows;
 import com.ftn.sbnz.model.template.MaxConcentrationByPhototype;
-import com.ftn.sbnz.service.dto.QuestionnaireRequest;
 import com.ftn.sbnz.service.entity.AppUser;
 import com.ftn.sbnz.service.entity.MaxConcentrationRuleEntity;
 import com.ftn.sbnz.service.entity.Role;
 import com.ftn.sbnz.service.repository.AppUserRepository;
 import com.ftn.sbnz.service.repository.MaxConcentrationRuleRepository;
 import com.ftn.sbnz.service.service.ProfileService;
+import com.ftn.sbnz.service.service.QuestionnaireExampleService;
 import com.ftn.sbnz.service.service.TemplateService;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.CommandLineRunner;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
-
-import java.io.IOException;
-import java.io.InputStream;
 
 @Component
 @RequiredArgsConstructor
@@ -34,7 +28,7 @@ public class DataSeeder implements CommandLineRunner {
     private final PasswordEncoder passwordEncoder;
     private final ProfileService profileService;
     private final TemplateService templateService;
-    private final ObjectMapper objectMapper;
+    private final QuestionnaireExampleService examples;
 
     @Override
     public void run(String... args) throws Exception {
@@ -47,15 +41,15 @@ public class DataSeeder implements CommandLineRunner {
         templateService.rebuildFromDatabase();
     }
 
-    private void seedUsers() throws IOException {
+    private void seedUsers() {
         user("admin@dermawise.rs", "admin123", "Administrator", Role.ADMIN);
         user("dermatolog@dermawise.rs", "derm123", "dr Jelena Marković", Role.DERMATOLOGIST);
 
         AppUser ana = user("ana@dermawise.rs", "user123", "Ana Petrović", Role.USER);
-        profileService.saveQuestionnaire(ana, questionnaire(false));
+        profileService.saveQuestionnaire(ana, examples.load("moderate-acne"));
 
         AppUser milica = user("milica@dermawise.rs", "user123", "Milica Jovanović", Role.USER);
-        profileService.saveQuestionnaire(milica, questionnaire(true));
+        profileService.saveQuestionnaire(milica, examples.load("moderate-acne-pregnant"));
 
         log.info("Demo accounts created: admin, dermatolog, ana, milica");
     }
@@ -76,13 +70,5 @@ public class DataSeeder implements CommandLineRunner {
 
     private AppUser user(String email, String password, String fullName, Role role) {
         return users.save(new AppUser(email, passwordEncoder.encode(password), fullName, role));
-    }
-
-    private QuestionnaireRequest questionnaire(boolean pregnant) throws IOException {
-        try (InputStream in = new ClassPathResource("questionnaires/moderate-acne.json").getInputStream()) {
-            ObjectNode json = (ObjectNode) objectMapper.readTree(in);
-            ((ObjectNode) json.get("lifestyle")).put("pregnant", pregnant);
-            return objectMapper.treeToValue(json, QuestionnaireRequest.class);
-        }
     }
 }

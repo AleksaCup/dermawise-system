@@ -11,6 +11,29 @@
     </div>
 
     <template v-else>
+      <div v-if="examples.length" class="examples mb-8">
+        <v-select
+          v-model="exampleKey"
+          :items="examples"
+          item-title="title"
+          item-value="key"
+          label="Popuni primerom"
+          hide-details
+          class="examples-select"
+        >
+          <template #item="{ props: itemProps, item }">
+            <v-list-item v-bind="itemProps" :subtitle="item.raw.description" />
+          </template>
+        </v-select>
+        <v-btn variant="outlined" :disabled="!exampleKey" @click="loadExample">Popuni</v-btn>
+        <v-btn color="primary" :disabled="!exampleKey" :loading="saving" @click="loadExampleAndSave">
+          Popuni i pokreni analizu
+        </v-btn>
+      </div>
+      <v-alert v-if="loadedExample" type="info" class="mb-6" closable @click:close="loadedExample = ''">
+        Učitan primer: {{ loadedExample }}. Odgovori mogu da se promene pre čuvanja.
+      </v-alert>
+
       <div class="d-flex justify-space-between align-baseline mb-2">
         <h2 class="text-h6 font-weight-bold">{{ steps[step]!.title }}</h2>
         <span class="muted tabular">Korak {{ step + 1 }} od {{ steps.length }}</span>
@@ -51,7 +74,7 @@ import StepPhototype from '~/components/questionnaire/StepPhototype.vue'
 import StepRosacea from '~/components/questionnaire/StepRosacea.vue'
 import StepScorad from '~/components/questionnaire/StepScorad.vue'
 import { ApiError } from '~/composables/useApi'
-import type { IngredientDto, ProductDto, Questionnaire } from '~/types/api'
+import type { IngredientDto, ProductDto, Questionnaire, QuestionnaireExample } from '~/types/api'
 
 definePageMeta({ roles: ['USER'] })
 
@@ -67,6 +90,9 @@ const steps = [
 ]
 
 const step = ref(0)
+const examples = ref<QuestionnaireExample[]>([])
+const exampleKey = ref<string | null>(null)
+const loadedExample = ref('')
 const loading = ref(true)
 const saving = ref(false)
 const error = ref('')
@@ -76,6 +102,7 @@ const form = ref<Questionnaire>(emptyQuestionnaire())
 
 onMounted(async () => {
   try {
+    examples.value = await profileApi.examples()
     const profile = await profileApi.get()
     if (profile) {
       form.value = profile.questionnaire
@@ -86,6 +113,24 @@ onMounted(async () => {
     loading.value = false
   }
 })
+
+function loadExample() {
+  const example = examples.value.find((e) => e.key === exampleKey.value)
+  if (!example) {
+    return false
+  }
+  form.value = JSON.parse(JSON.stringify(example.questionnaire))
+  phototypeErrors.value = {}
+  loadedExample.value = example.title
+  step.value = 0
+  return true
+}
+
+async function loadExampleAndSave() {
+  if (loadExample()) {
+    await save()
+  }
+}
 
 function validatePhototype() {
   const required = {
@@ -142,3 +187,16 @@ async function save() {
   }
 }
 </script>
+
+<style scoped>
+.examples {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+
+.examples-select {
+  flex: 1 1 280px;
+}
+</style>

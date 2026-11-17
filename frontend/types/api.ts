@@ -326,3 +326,10 @@ export interface IngredientOption {
   kind: IngredientKind
   partOf: string[]
 }
+
+export interface QuestionnaireExample {
+  key: string
+  title: string
+  description: string
+  questionnaire: Questionnaire
+}
