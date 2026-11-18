@@ -18,7 +18,7 @@
           <div class="d-flex align-center ga-2 mb-2">
             <v-icon :icon="hypothesis.proven ? mdiCheckCircleOutline : mdiCloseCircleOutline" :color="hypothesis.proven ? 'success' : 'error'" aria-hidden="true" />
             <strong>{{ goalTitle }}: {{ hypothesis.proven ? 'dokazano' : 'nije dokazano' }}</strong>
-            <span class="text-body-2 muted">· upit {{ hypothesis.query }}</span>
+            <span class="text-body-2 muted">(upit {{ hypothesis.query }})</span>
           </div>
           <template v-if="hypothesis.proven">
             <p class="text-body-2 mb-2">Dokazano preko:</p>

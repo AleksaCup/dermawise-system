@@ -21,11 +21,7 @@
         <v-chip v-if="item.pregnant" color="warning" label>Trudnoća</v-chip>
       </v-card-title>
       <v-card-text>
-        <p class="text-body-2 muted mb-0">
-          {{ item.recommendation.origin === 'CEP' ? 'Iz dnevnika kože' : 'Iz analize' }}
-          <span v-if="item.recommendation.forCondition">· {{ CONDITION_LABELS[item.recommendation.forCondition] }}</span>
-          · {{ formatDate(item.recommendation.createdAt) }}
-        </p>
+        <p class="text-body-2 muted mb-0">{{ origin(item) }}</p>
         <RecommendationItem :recommendation="item.recommendation" />
         <v-textarea
           v-model="comments[item.recommendation.id]"
@@ -53,6 +49,15 @@ import { ApiError } from '~/composables/useApi'
 import type { PendingRecommendation } from '~/types/api'
 
 definePageMeta({ roles: ['DERMATOLOGIST'] })
+
+function origin(item: PendingRecommendation) {
+  const parts = [item.recommendation.origin === 'CEP' ? 'Iz dnevnika kože' : 'Iz analize']
+  if (item.recommendation.forCondition) {
+    parts.push(CONDITION_LABELS[item.recommendation.forCondition] ?? item.recommendation.forCondition)
+  }
+  parts.push(formatDate(item.recommendation.createdAt))
+  return parts.join(', ')
+}
 
 const dermatologistApi = useDermatologistApi()
 

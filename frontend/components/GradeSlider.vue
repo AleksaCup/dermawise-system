@@ -27,6 +27,6 @@ const props = withDefaults(defineProps<{ label: string; max?: number; labels?: s
 const model = defineModel<number>({ required: true })
 
 const valueLabel = computed(() =>
-  props.max === 3 ? `${model.value} · ${props.labels[model.value]}` : `${model.value} / ${props.max}`,
+  props.max === 3 ? `${props.labels[model.value]} (${model.value})` : `${model.value} / ${props.max}`,
 )
 </script>

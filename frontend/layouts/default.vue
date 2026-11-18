@@ -20,7 +20,7 @@
         <template v-if="auth.isLoggedIn && auth.user">
           <span v-if="!mobile" class="user-label">
             {{ auth.user.fullName }}
-            <span class="muted">· {{ ROLE_LABELS[auth.user.role] }}</span>
+            <span class="role">{{ ROLE_LABELS[auth.user.role] }}</span>
           </span>
           <v-btn variant="outlined" size="small" @click="logout">Odjava</v-btn>
         </template>
@@ -90,6 +90,15 @@ async function logout() {
 
 .user-label {
   font-size: 0.9rem;
-  margin-right: 8px;
+  margin-right: 12px;
+}
+
+.role {
+  margin-left: 6px;
+  padding: 1px 8px;
+  border-radius: 4px;
+  background: #f1f5f9;
+  color: #475569;
+  font-size: 0.8125rem;
 }
 </style>
