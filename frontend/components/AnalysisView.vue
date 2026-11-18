@@ -21,7 +21,7 @@
               <span class="font-weight-bold">{{ CONDITION_LABELS[d.condition] }}</span>
               <span v-if="d.subtype">, {{ SUBTYPE_LABELS[d.subtype] }}</span>
               <span v-if="d.severity" class="muted">, {{ SEVERITY_LABELS[d.severity] }}</span>
-              <span v-if="d.score !== null" class="muted tabular"> · {{ scoreLabel(d.condition, d.score) }}</span>
+              <span v-if="d.score !== null" class="muted tabular">{{ ` (${scoreLabel(d.condition, d.score)})` }}</span>
             </div>
           </v-card-text>
         </v-card>
@@ -64,9 +64,12 @@
     <template v-if="result.safetyNotes.length">
       <h2 class="section-title">Bezbednosne napomene</h2>
       <v-card>
-        <v-list lines="two">
-          <v-list-item v-for="(note, i) in result.safetyNotes" :key="i" :title="note.text" :subtitle="note.source" />
-        </v-list>
+        <v-card-text>
+          <div v-for="(note, i) in result.safetyNotes" :key="i" class="note">
+            <p class="mb-0">{{ note.text }}</p>
+            <RuleSource :source="note.source" />
+          </div>
+        </v-card-text>
       </v-card>
     </template>
 
@@ -115,7 +118,7 @@
                 <tr v-for="(s, i) in result.explanation" :key="i">
                   <td class="tabular muted">{{ i + 1 }}</td>
                   <td>{{ PHASE_LABELS[s.agendaGroup] ?? s.agendaGroup }}</td>
-                  <td>{{ s.ruleName }}</td>
+                  <td class="font-weight-bold">{{ s.ruleName }}</td>
                   <td>{{ s.description }}</td>
                   <td class="muted">{{ s.source }}</td>
                 </tr>
@@ -130,11 +133,26 @@
 
 <script setup lang="ts">
 import type { AnalysisResponse } from '~/types/api'
+import RuleSource from '~/components/RuleSource.vue'
 
 defineProps<{ result: AnalysisResponse }>()
 </script>
 
 <style scoped>
+.note {
+  padding: 12px 0;
+  border-bottom: 1px solid var(--dw-border);
+}
+
+.note:first-child {
+  padding-top: 0;
+}
+
+.note:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
 .big {
   font-size: 2.5rem;
   font-weight: 700;
