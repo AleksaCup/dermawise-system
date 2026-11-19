@@ -61,6 +61,7 @@ function origin(item: PendingRecommendation) {
   if (item.recommendation.forCondition) {
     parts.push(CONDITION_LABELS[item.recommendation.forCondition] ?? item.recommendation.forCondition)
   }
+  parts.push(item.recommendation.slot === 'MORNING' ? 'jutarnja rutina' : 'večernja rutina')
   parts.push(formatDate(item.recommendation.createdAt))
   return parts.join(', ')
 }
