@@ -1,3 +1,5 @@
+import type { IngredientKind } from '~/types/api'
+
 export interface Option<T extends string> {
   value: T
   title: string
@@ -229,3 +231,10 @@ export const GOALS = [
   { value: 'akne', title: 'Akne' },
   { value: 'perioralni-dermatitis', title: 'Perioralni dermatitis' },
 ]
+
+export const INGREDIENT_KIND_LABELS: Record<IngredientKind, string> = {
+  THERAPY: 'aktivni sastojak',
+  INGREDIENT: 'sastojak',
+  GROUP: 'grupa sastojaka',
+  MIXTURE: 'mešavina',
+}

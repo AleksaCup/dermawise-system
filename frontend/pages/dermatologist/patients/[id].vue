@@ -33,7 +33,7 @@
               v-for="a in alerts"
               :key="a.id"
               :title="ALERT_LABELS[a.type] ?? a.type"
-              :subtitle="`${formatDate(a.occurredAt)} · ${a.message}`"
+              :subtitle="`${formatDate(a.occurredAt)}, ${a.message}`"
             />
           </v-list>
         </v-card>

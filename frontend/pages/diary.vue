@@ -6,6 +6,18 @@
       primeti obrazac.
     </p>
 
+    <HowItWorks method="CEP, obrada događaja kroz vreme" :files="['cep_diary.drl', 'safety.drl']">
+      Svaki unos je događaj sa vremenom i ide u posebnu sesiju za ovog korisnika. Pravila gledaju klizne vremenske
+      prozore: četiri flushing epizode u 7 dana daju sumnju na rozaceju, isti okidač tri puta u 30 dana postaje
+      dominantan, UV doza u 24 h se poredi sa polovinom MED vrednosti, a pet takvih upozorenja u 30 dana daje rizik od
+      fotostarenja sa preporukom koja prolazi kroz bezbednosna pravila.
+    </HowItWorks>
+
+    <div class="demo-week mb-6">
+      <v-btn variant="outlined" :loading="demoLoading" @click="demoWeek">Popuni demo nedelju</v-btn>
+      <span class="text-body-2 muted">Pet flushing epizoda i pet dana na suncu unazad, da se odmah vide upozorenja.</span>
+    </div>
+
     <v-alert v-if="error" type="error" class="mb-6" role="alert">{{ error }}</v-alert>
 
     <v-row>
@@ -34,7 +46,7 @@
         <v-card>
           <v-card-title class="d-flex justify-space-between align-center">
             <span>Upozorenja</span>
-            <span class="text-body-2 muted">{{ unseen }} novih</span>
+            <span class="text-body-2 muted">{{ unseenLabel }}</span>
           </v-card-title>
           <v-card-text>
             <p v-if="!alerts.length" class="muted mb-0">Još nema upozorenja.</p>
@@ -85,15 +97,12 @@
       </div>
     </v-card>
 
-    <div class="mt-6">
-      <v-btn variant="text" size="small" :loading="demoLoading" @click="demoWeek">
-        Demo: popuni nedelju flushinga i sunca
-      </v-btn>
-    </div>
+
   </section>
 </template>
 
 <script setup lang="ts">
+import HowItWorks from '~/components/HowItWorks.vue'
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import EntryForm from '~/components/diary/EntryForm.vue'
 import { ApiError } from '~/composables/useApi'
@@ -113,6 +122,16 @@ const demoLoading = ref(false)
 let timer: ReturnType<typeof setInterval> | undefined
 
 const unseen = computed(() => alerts.value.filter((a) => !a.seen).length)
+const unseenLabel = computed(() => {
+  const n = unseen.value
+  if (n % 10 === 1 && n % 100 !== 11) {
+    return `${n} novo`
+  }
+  if ([2, 3, 4].includes(n % 10) && ![12, 13, 14].includes(n % 100)) {
+    return `${n} nova`
+  }
+  return `${n} novih`
+})
 
 async function load() {
   try {
@@ -185,6 +204,13 @@ function details(e: DiaryEntry): string {
 </script>
 
 <style scoped>
+.demo-week {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+}
+
 .alert-row {
   padding: 12px 0;
   border-bottom: 1px solid var(--dw-border);

@@ -77,4 +77,19 @@ class BackwardControllerTest {
                 .andExpect(jsonPath("$.knownAllergen").value(false))
                 .andExpect(jsonPath("$.groups[0]").value("retinoidi"));
     }
+
+    @Test
+    void ingredientSuggestionsComeFromTheGraphAndTherapy() throws Exception {
+        String token = ApiTestSupport.registerUser(mvc, mapper);
+
+        mvc.perform(get("/api/backward/ingredients").header("Authorization", token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[?(@.name == 'kathon cg')].kind").value("MIXTURE"))
+                .andExpect(jsonPath("$[?(@.name == 'methylisothiazolinone')].partOf[*]",
+                        containsInAnyOrder("isothiazolinones", "kathon cg")))
+                .andExpect(jsonPath("$[?(@.name == 'isothiazolinones')].kind").value("GROUP"))
+                .andExpect(jsonPath("$[?(@.name == 'adapalen')].kind").value("THERAPY"))
+                .andExpect(jsonPath("$[?(@.name == 'adapalen')].partOf[*]").value("retinoidi"))
+                .andExpect(jsonPath("$[?(@.name == 'hidrohinon')].kind").value("THERAPY"));
+    }
 }

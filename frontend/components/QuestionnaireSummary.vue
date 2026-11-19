@@ -47,9 +47,9 @@
         <v-card-text>
           <p class="mb-2">{{ rosaceaSigns.length ? rosaceaSigns.join(', ') : 'Bez znakova rozaceje' }}</p>
           <p class="text-body-2 muted tabular mb-0">
-            Flushing {{ q.rosacea.flushingPerWeek }}x nedeljno · papule {{ q.rosacea.papuleCount }} · pustule
-            {{ q.rosacea.pustuleCount }} · SCORAD površina {{ q.scorad.affectedAreaPercent }}%, svrab
-            {{ q.scorad.pruritus }}/10
+            Flushing {{ q.rosacea.flushingPerWeek }}x nedeljno, papule {{ q.rosacea.papuleCount }}, pustule
+            {{ q.rosacea.pustuleCount }}. SCORAD površina {{ q.scorad.affectedAreaPercent }}%, svrab
+            {{ q.scorad.pruritus }}/10.
           </p>
         </v-card-text>
       </v-card>

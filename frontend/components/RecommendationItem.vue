@@ -4,9 +4,7 @@
       <div>
         <div class="step">{{ STEP_LABELS[recommendation.step] }}</div>
         <div class="name">
-          {{ recommendation.sastojak }}
-          <span v-if="recommendation.koncentracija !== null" class="tabular">{{ ` ${recommendation.koncentracija}%` }}</span>
-          <span class="muted">{{ ` · ${recommendation.form}` }}</span>
+          <span>{{ recommendation.sastojak }}</span><span v-if="recommendation.koncentracija !== null" class="tabular">{{ ` ${recommendation.koncentracija}%` }}</span><span class="form">{{ `, ${recommendation.form}` }}</span>
         </div>
         <div class="muted text-body-2">{{ recommendation.frequency }}</div>
       </div>
@@ -20,12 +18,13 @@
       Komentar dermatologa: {{ recommendation.reviewComment }}
     </p>
     <p class="text-body-2 muted mt-1 mb-0">{{ recommendation.reason }}</p>
-    <p class="source mb-0">{{ recommendation.source }} · pravilo „{{ recommendation.ruleName }}”</p>
+    <RuleSource :rule="recommendation.ruleName" :source="recommendation.source" />
   </div>
 </template>
 
 <script setup lang="ts">
 import type { Recommendation } from '~/types/api'
+import RuleSource from '~/components/RuleSource.vue'
 
 defineProps<{ recommendation: Recommendation }>()
 </script>
@@ -41,14 +40,18 @@ defineProps<{ recommendation: Recommendation }>()
 }
 
 .step {
-  font-size: 0.75rem;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
+  font-size: 0.8125rem;
+  font-weight: 600;
   color: #475569;
 }
 
 .name {
   font-weight: 700;
+}
+
+.form {
+  font-weight: 400;
+  color: #475569;
 }
 
 .warnings {
@@ -57,9 +60,4 @@ defineProps<{ recommendation: Recommendation }>()
   color: rgb(var(--v-theme-warning));
 }
 
-.source {
-  font-size: 0.8rem;
-  color: #64748b;
-  margin-top: 4px;
-}
 </style>

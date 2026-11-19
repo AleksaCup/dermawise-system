@@ -15,7 +15,12 @@
       />
       <div class="text-body-2 mb-2">Sastojci</div>
       <div v-for="(ingredient, index) in model.ingredients" :key="index" class="d-flex ga-2 align-start">
-        <v-text-field v-model="ingredient.name" :label="`Sastojak ${index + 1}`" class="flex-grow-1" />
+        <IngredientField
+          v-model="ingredient.name"
+          :label="`Sastojak ${index + 1}`"
+          :kinds="['THERAPY', 'INGREDIENT', 'MIXTURE']"
+          class="flex-grow-1 mb-4"
+        />
         <v-text-field
           v-model.number="ingredient.concentration"
           type="number"
@@ -42,6 +47,7 @@
 <script setup lang="ts">
 import { mdiClose, mdiPlus } from '@mdi/js'
 import type { ProductDto } from '~/types/api'
+import IngredientField from '~/components/IngredientField.vue'
 
 withDefaults(defineProps<{ removable?: boolean }>(), { removable: true })
 defineEmits<{ remove: [] }>()

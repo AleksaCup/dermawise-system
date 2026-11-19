@@ -11,6 +11,12 @@
       <v-btn color="primary" :prepend-icon="mdiPlus" @click="openNew">Dodaj red</v-btn>
     </div>
 
+    <HowItWorks method="template" :files="['MaxConcentrationByPhototype.drt']">
+      Redovi su u bazi podataka. Iz svakog reda se generišu dva pravila za fazu bezbednosti: jedno smanjuje koncentraciju
+      preporuke koja prelazi maksimum za fototip, drugo upozorava na proizvod koji korisnik već koristi. Posle izmene se
+      sve baze znanja ponovo grade i zamenjuju bez restartovanja servera. Generisana pravila su u pregledu baze znanja.
+    </HowItWorks>
+
     <v-alert v-if="error" type="error" class="mb-4" role="alert">{{ error }}</v-alert>
     <p v-if="message" class="mb-4" role="status" aria-live="polite">{{ message }}</p>
 
@@ -62,7 +68,13 @@
         <v-card-title>{{ editing ? 'Izmena reda' : 'Novi red' }}</v-card-title>
         <v-card-text>
           <v-form @submit.prevent="save">
-            <v-text-field v-model="form.sastojak" label="Sastojak" hint="Naziv kao u preporukama, npr. retinol" persistent-hint class="mb-2" />
+            <IngredientField
+              v-model="form.sastojak"
+              label="Sastojak"
+              hint="Naziv kao u preporukama, npr. retinol ili adapalen"
+              :kinds="['THERAPY']"
+              class="mb-2"
+            />
             <v-row>
               <v-col cols="6">
                 <v-select v-model="form.minFototip" :items="phototypes" label="Od fototipa" />
@@ -105,10 +117,12 @@
 </template>
 
 <script setup lang="ts">
+import HowItWorks from '~/components/HowItWorks.vue'
 import { onMounted, ref } from 'vue'
 import { mdiPlus } from '@mdi/js'
 import { ApiError } from '~/composables/useApi'
 import type { TemplateRule, TemplateRuleRequest } from '~/types/api'
+import IngredientField from '~/components/IngredientField.vue'
 
 definePageMeta({ roles: ['DERMATOLOGIST'] })
 
