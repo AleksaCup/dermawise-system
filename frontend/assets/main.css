@@ -6,7 +6,9 @@
 html,
 body,
 .v-application,
-.v-application [class*='text-'] {
+.v-overlay-container,
+.v-application [class*='text-'],
+.v-overlay-container [class*='text-'] {
   font-family: var(--dw-font) !important;
 }
 
@@ -14,13 +16,13 @@ body,
   line-height: 1.55;
 }
 
-.v-application .v-btn {
+:root .v-btn {
   text-transform: none;
   letter-spacing: normal;
   font-weight: 700;
 }
 
-.v-application .v-card-title {
+:root .v-card-title {
   font-size: 1.05rem;
   font-weight: 700;
   letter-spacing: normal;
