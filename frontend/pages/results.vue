@@ -11,6 +11,16 @@
       </div>
     </div>
 
+    <HowItWorks
+      method="forward chaining u četiri faze"
+      :files="['phototype.drl', 'diagnosis.drl', 'therapy.drl', 'safety.drl', 'SeverityCategory.drt', 'MaxConcentrationByPhototype.drt']"
+    >
+      Odgovori iz upitnika ulaze u sesiju kao činjenice. Pravila se okidaju redom po fazama: fototip i MED, zatim
+      dijagnoza (GAGS i SCORAD se sabiraju sa accumulate, kategoriju težine daje template), zatim terapija i na kraju
+      bezbednost (trudnoća, alergije, razdvajanje benzoil peroksida i retinoida, maksimalne koncentracije iz template-a).
+      Svaka faza koristi činjenice koje je napravila prethodna. Pod Obrazloženje je spisak svih okinutih pravila.
+    </HowItWorks>
+
     <v-alert v-if="error" type="error" class="mb-6" role="alert">{{ error }}</v-alert>
 
     <div v-if="loading" class="py-12 text-center">
@@ -28,6 +38,7 @@
 </template>
 
 <script setup lang="ts">
+import HowItWorks from '~/components/HowItWorks.vue'
 import { ref, onMounted } from 'vue'
 import { ApiError } from '~/composables/useApi'
 import type { AnalysisResponse } from '~/types/api'

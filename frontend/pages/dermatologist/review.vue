@@ -5,6 +5,11 @@
       Preporuke za lekove na recept čekaju vašu potvrdu. Korisnik vidi odluku i komentar u svojoj rutini.
     </p>
 
+    <HowItWorks method="status preporuke" :files="['therapy.drl', 'safety.drl']">
+      Pravila terapije označavaju preporuke koje traže recept (npr. azelainska kiselina, ivermektin, brimonidin).
+      One dobijaju status PENDING_REVIEW i ne ulaze u rutinu dok ih dermatolog ne odobri.
+    </HowItWorks>
+
     <v-alert v-if="error" type="error" class="mb-6" role="alert">{{ error }}</v-alert>
     <p v-if="message" class="mb-4" role="status" aria-live="polite">{{ message }}</p>
 
@@ -44,6 +49,7 @@
 </template>
 
 <script setup lang="ts">
+import HowItWorks from '~/components/HowItWorks.vue'
 import { onMounted, ref } from 'vue'
 import { ApiError } from '~/composables/useApi'
 import type { PendingRecommendation } from '~/types/api'

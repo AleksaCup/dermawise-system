@@ -6,6 +6,13 @@
       primeti obrazac.
     </p>
 
+    <HowItWorks method="CEP, obrada događaja kroz vreme" :files="['cep_diary.drl', 'safety.drl']">
+      Svaki unos je događaj sa vremenom i ide u posebnu sesiju za ovog korisnika. Pravila gledaju klizne vremenske
+      prozore: četiri flushing epizode u 7 dana daju sumnju na rozaceju, isti okidač tri puta u 30 dana postaje
+      dominantan, UV doza u 24 h se poredi sa polovinom MED vrednosti, a pet takvih upozorenja u 30 dana daje rizik od
+      fotostarenja sa preporukom koja prolazi kroz bezbednosna pravila.
+    </HowItWorks>
+
     <div class="demo-week mb-6">
       <v-btn variant="outlined" :loading="demoLoading" @click="demoWeek">Popuni demo nedelju</v-btn>
       <span class="text-body-2 muted">Pet flushing epizoda i pet dana na suncu unazad, da se odmah vide upozorenja.</span>
@@ -95,6 +102,7 @@
 </template>
 
 <script setup lang="ts">
+import HowItWorks from '~/components/HowItWorks.vue'
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import EntryForm from '~/components/diary/EntryForm.vue'
 import { ApiError } from '~/composables/useApi'
