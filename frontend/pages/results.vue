@@ -12,13 +12,14 @@
     </div>
 
     <HowItWorks
-      method="forward chaining u četiri faze"
+      method="forward chaining u šest nivoa"
       :files="['phototype.drl', 'diagnosis.drl', 'therapy.drl', 'safety.drl', 'SeverityCategory.drt', 'MaxConcentrationByPhototype.drt']"
     >
-      Odgovori iz upitnika ulaze u sesiju kao činjenice. Pravila se okidaju redom po fazama: fototip i MED, zatim
-      dijagnoza (GAGS i SCORAD se sabiraju sa accumulate, kategoriju težine daje template), zatim terapija i na kraju
-      bezbednost (trudnoća, alergije, razdvajanje benzoil peroksida i retinoida, maksimalne koncentracije iz template-a).
-      Svaka faza koristi činjenice koje je napravila prethodna. Pod Obrazloženje je spisak svih okinutih pravila.
+      Odgovori iz upitnika ulaze u sesiju kao činjenice. Pravila su podeljena u četiri faze (agenda grupe: fototip,
+      dijagnostika, terapija, bezbednost), a lanac zaključivanja ima šest nivoa: upitnik spreman, fototip i MED, GAGS i
+      SCORAD skor (accumulate), kategorija težine (template) i dijagnoza, terapija i na kraju bezbednost (trudnoća,
+      alergije, razdvajanje benzoil peroksida i retinoida, maksimalne koncentracije iz template-a). Svaki nivo koristi
+      činjenice koje je napravio prethodni. Pod Obrazloženje je spisak svih okinutih pravila.
     </HowItWorks>
 
     <v-alert v-if="error" type="error" class="mb-6" role="alert">{{ error }}</v-alert>
