@@ -11,12 +11,6 @@
       <v-btn color="primary" :prepend-icon="mdiPlus" @click="openNew">Dodaj red</v-btn>
     </div>
 
-    <HowItWorks method="template" :files="['MaxConcentrationByPhototype.drt']">
-      Redovi su u bazi podataka. Iz svakog reda se generišu dva pravila za fazu bezbednosti: jedno smanjuje koncentraciju
-      preporuke koja prelazi maksimum za fototip, drugo upozorava na proizvod koji korisnik već koristi. Posle izmene se
-      sve baze znanja ponovo grade i zamenjuju bez restartovanja servera. Generisana pravila su u pregledu baze znanja.
-    </HowItWorks>
-
     <v-alert v-if="error" type="error" class="mb-4" role="alert">{{ error }}</v-alert>
     <p v-if="message" class="mb-4" role="status" aria-live="polite">{{ message }}</p>
 
@@ -117,7 +111,6 @@
 </template>
 
 <script setup lang="ts">
-import HowItWorks from '~/components/HowItWorks.vue'
 import { onMounted, ref } from 'vue'
 import { mdiPlus } from '@mdi/js'
 import { ApiError } from '~/composables/useApi'
