@@ -6,8 +6,8 @@
     </p>
 
     <HowItWorks method="tri baze znanja">
-      Baze se grade u kodu (KnowledgeBaseFactory, KieHelper). Analiza koristi pravila sve četiri faze za forward chaining, Hipoteze
-      koriste upite iz backward.drl, a Dnevnik radi u stream režimu za CEP. Template redovi se pretvaraju u pravila pri
+      Baze se grade u kodu (KnowledgeBaseFactory, KieHelper). Analiza koristi pravila sve četiri faze (agenda grupe) za
+      forward chaining, Hipoteze koriste upite iz backward.drl, a Dnevnik radi u stream režimu za CEP. Template redovi se pretvaraju u pravila pri
       svakoj izgradnji, zato se broj pravila menja kada dermatolog doda red.
     </HowItWorks>
 
