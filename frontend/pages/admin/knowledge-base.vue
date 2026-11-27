@@ -5,12 +5,6 @@
       Pravila koja su trenutno učitana. Posle svake izmene template-a baza se ponovo gradi i dobija novu verziju.
     </p>
 
-    <HowItWorks method="tri baze znanja">
-      Baze se grade u kodu (KnowledgeBaseFactory, KieHelper). Analiza koristi pravila sve četiri faze (agenda grupe) za
-      forward chaining, Hipoteze koriste upite iz backward.drl, a Dnevnik radi u stream režimu za CEP. Template redovi se pretvaraju u pravila pri
-      svakoj izgradnji, zato se broj pravila menja kada dermatolog doda red.
-    </HowItWorks>
-
     <v-alert v-if="error" type="error" class="mb-4" role="alert">{{ error }}</v-alert>
 
     <div v-if="loading" class="py-12 text-center">
@@ -82,7 +76,6 @@
 </template>
 
 <script setup lang="ts">
-import HowItWorks from '~/components/HowItWorks.vue'
 import { computed, onMounted, ref } from 'vue'
 import { ApiError } from '~/composables/useApi'
 import type { KnowledgeBaseInfo } from '~/types/api'

@@ -11,17 +11,6 @@
       </div>
     </div>
 
-    <HowItWorks
-      method="forward chaining u šest nivoa"
-      :files="['phototype.drl', 'diagnosis.drl', 'therapy.drl', 'safety.drl', 'SeverityCategory.drt', 'MaxConcentrationByPhototype.drt']"
-    >
-      Odgovori iz upitnika ulaze u sesiju kao činjenice. Pravila su podeljena u četiri faze (agenda grupe: fototip,
-      dijagnostika, terapija, bezbednost), a lanac zaključivanja ima šest nivoa: upitnik spreman, fototip i MED, GAGS i
-      SCORAD skor (accumulate), kategorija težine (template) i dijagnoza, terapija i na kraju bezbednost (trudnoća,
-      alergije, razdvajanje benzoil peroksida i retinoida, maksimalne koncentracije iz template-a). Svaki nivo koristi
-      činjenice koje je napravio prethodni. Pod Obrazloženje je spisak svih okinutih pravila.
-    </HowItWorks>
-
     <v-alert v-if="error" type="error" class="mb-6" role="alert">{{ error }}</v-alert>
 
     <div v-if="loading" class="py-12 text-center">
@@ -39,7 +28,6 @@
 </template>
 
 <script setup lang="ts">
-import HowItWorks from '~/components/HowItWorks.vue'
 import { ref, onMounted } from 'vue'
 import { ApiError } from '~/composables/useApi'
 import type { AnalysisResponse } from '~/types/api'
